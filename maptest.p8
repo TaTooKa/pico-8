@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 4
+version 8
 __lua__
 -- globals
 timer=0
