@@ -3,6 +3,7 @@ version 8
 __lua__
 -- infiniboss
 debugtext = ""
+seed = 8
 
 -- boss
 boss = {}
@@ -11,14 +12,17 @@ boss.x = 10
 boss.y = 10
 boss.width = 5
 boss.height = 5
+boss.block_density = 1
 boss["tiles"] = {}
 boss["tiles"]["blocks"] = {}
 boss["tiles"]["weps"] = {}
 
 function _init()
 	cls()
+	--srand(seed)
 	initbossmatrix()
-	createtestboss()
+	--createtestboss()
+ generateboss()
 end
 
 function _update()
@@ -84,6 +88,262 @@ function drawboss()
 
 end
 
+function generateboss()
+	midcol = flr(boss.width/2)+1
+	midrow = flr(boss.height/2)+1
+	
+	-- add core
+	boss.tiles.blocks[midcol][midrow] = 1	
+
+ -- add filler blocks
+ boss.tiles.blocks[midcol][midrow-1] = get_rand_block("filler")
+ boss.tiles.blocks[midcol][midrow+1] = get_rand_block("filler")
+ boss.tiles.blocks[midcol-1][midrow] = get_rand_block("filler")
+ 
+ -- add more fillers randomly
+ for i=1,boss.block_density do
+	 add_rand_filler_blocks()
+ end
+			
+		-- change terminations
+	change_border_blocks()
+	
+	-- remove floating blocks
+	remove_floating_blocks()
+
+	-- add more terminations randomly
+ add_rand_term_blocks()
+		
+	-- mirror boss tiles
+	mirror_boss_tiles()
+end
+
+function add_rand_filler_blocks()
+	halfw = flr(boss.width/2)+1
+	rand_offsets = {-1,0,1}
+	
+	for col=1,halfw do
+		for row=1,boss.height do
+			if (boss.tiles.blocks[col][row] != 0) then
+				rand_offset_x = rand_offsets[flr(rnd(3))+1]
+				rand_offset_y = rand_offsets[flr(rnd(3))+1]
+				newcol = col + rand_offset_x
+				newrow = row + rand_offset_y
+	   if (newcol >=1 and 
+	   	newcol <= halfw and
+	   	newrow >= 1 and
+	   	newrow <= boss.height and
+	   	boss.tiles.blocks[newcol][newrow] == 0) then
+					boss.tiles.blocks[newcol][newrow] = get_rand_block("filler")	   
+	   end		 
+			end
+		end
+	end
+end
+
+function add_rand_term_blocks()
+	
+	for col=1,halfw do
+		for row=1,boss.height do
+			left = false
+			right = false
+			top = false
+			bottom = false
+
+			if (boss.tiles.blocks[col][row] == 0) then
+				-- if right block is filler...
+				if (col < halfw and get_block_type(boss.tiles.blocks[col+1][row]) == "filler") then
+				 left = true
+				end
+				-- if left block is filler...
+				if (col > 1 and get_block_type(boss.tiles.blocks[col-1][row]) == "filler") then
+				 right = true
+				end
+				-- if bottom block is filler...
+				if (row < boss.height and get_block_type(boss.tiles.blocks[col][row+1]) == "filler") then
+					top = true
+				end
+			 -- if top block is filler...
+				if (row > 1 and get_block_type(boss.tiles.blocks[col][row-1]) == "filler") then
+					bottom = true
+				end
+				
+				if (left and right) then		
+					boss.tiles.blocks[col][row] = get_rand_block("leftright")
+				elseif (top and bottom) then		
+					boss.tiles.blocks[col][row] = get_rand_block("topbottom")
+				elseif (left and bottom) then
+					boss.tiles.blocks[col][row] = get_rand_block("bottoml")
+				elseif (right and bottom) then		
+					boss.tiles.blocks[col][row] = get_rand_block("bottomr")
+				elseif (left) then		
+					boss.tiles.blocks[col][row] = get_rand_block("left")
+				elseif (right) then		
+					boss.tiles.blocks[col][row] = get_rand_block("right")
+				elseif (top) then		
+					boss.tiles.blocks[col][row] = get_rand_block("top")
+				elseif (bottom) then		
+					boss.tiles.blocks[col][row] = get_rand_block("bottom")
+				end				
+			end	 
+	 end
+	end
+end
+
+function remove_floating_blocks()
+	for col=1,boss.width do
+		for row=1,boss.height do
+			if ( boss.tiles.blocks[col][row] != 0 and not has_adjacent_blocks(col,row) ) then
+				boss.tiles.blocks[col][row] = 0
+			end
+		end
+	end
+end
+
+function has_adjacent_blocks(col,row)
+	result = false
+	if (col-1 > 0 and boss.tiles.blocks[col-1][row] != 0) then
+  result = true
+ end
+	if (col+1 < boss.width+1 and boss.tiles.blocks[col+1][row] != 0) then
+  result = true
+ end
+	if (row-1 > 0 and boss.tiles.blocks[col][row-1] != 0) then
+  result = true
+ end
+	if (row+1 < boss.height+1 and boss.tiles.blocks[col][row+1] != 0) then
+  result = true
+ end
+ return result
+end
+
+function change_border_blocks()
+	halfw = flr(boss.width/2)+1
+	
+	for col=1,halfw do
+		for row=1,boss.height do
+			if (boss.tiles.blocks[col][row] != 0) then
+			
+				if (col == 1) then
+					if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
+			 		boss.tiles.blocks[col][row] = get_rand_block("left")
+			 	end	
+				elseif (row == 1) then
+					if (get_block_type(boss.tiles.blocks[col][row]) != "top") then
+			 		boss.tiles.blocks[col][row] = get_rand_block("top")
+			 	end	
+				elseif (row == boss.height) then
+					if (get_block_type(boss.tiles.blocks[col][row]) != "bottom") then
+			 		boss.tiles.blocks[col][row] = get_rand_block("bottom")
+			 	end	
+				end
+			
+			end
+		end
+	end
+end
+
+function mirror_boss_tiles()
+	halfw = flr(boss.width/2)+1
+	
+	for col=1,halfw do
+		for row=1,boss.height do
+			blockspr = boss.tiles.blocks[col][row]
+			blocknewcol = boss.width+1-col
+			if (blockspr != 0) then
+				blocktype = get_block_type(blockspr)
+				
+				if (blocktype == "left"
+					or blocktype == "bottoml") then 
+					blockspr+=8
+				elseif (blocktype == "right"
+					or blocktype == "bottomr") then
+					blockspr-=8					
+				end
+		
+				boss.tiles.blocks[blocknewcol][row] = blockspr
+		 end
+		end
+	end
+
+end
+
+function get_rand_block(blocktype)
+	start=0
+	len=1
+	if (blocktype == "filler") then
+		start=2
+		len=15
+	elseif (blocktype == "top") then
+		start=64
+		len=3
+	elseif (blocktype == "left") then
+		start=80
+		len=3
+	elseif (blocktype == "bottom") then
+		start=72
+		len=4
+	elseif (blocktype == "right") then
+		start=88
+		len=3
+	elseif (blocktype == "bottoml") then
+		start=96
+		len=5
+	elseif (blocktype == "bottomr") then
+		start=104
+		len=5
+	elseif (blocktype == "bottomlr") then
+		start=24
+		len=2
+	elseif (blocktype == "leftright") then
+		start=40
+		len=3
+	elseif (blocktype == "topbottom") then
+		start=44
+		len=3
+ end
+ 
+	return start+flr(rnd(len))
+
+end
+
+function get_block_type(num)
+	if (num == 1) then
+		return "core"
+	end
+	if (num>=2 and num<=23) then
+		return "filler"
+	end
+	if (num>=24 and num<=31) then
+		return "bottomlr"
+	end
+	if (num>=40 and num<=43) then
+		return "leftright"
+	end
+	if (num>=44 and num<=47) then
+		return "topbottom"
+	end
+	if (num>=64 and num<=71) then
+		return "top"
+	end
+	if (num>=72 and num<=79) then
+		return "bottom"
+	end
+	if (num>=80 and num<=87) then
+		return "left"
+	end
+	if (num>=88 and num<=95) then
+		return "right"
+	end
+	if (num>=96 and num<=103) then
+		return "bottoml"
+	end
+	if (num>=104 and num<=111) then
+		return "bottomr"
+	end
+	return "unknown"
+end
+
 function drawdebug()
 	print(debugtext, 0, 120)
 end
@@ -104,14 +364,14 @@ __gfx__
 7666d66500500500005005000050050000500500005005000050050000500500ddd55ddd557dd755005005000050050000500500005005000050050000500500
 76d6d665050000500500005005000050050000500500005005000050050000505dd55dd5dd5555dd050000500500005005000050050000500500005005000050
 7666d665500000055000000550000005500000055000000550000005500000050555555000dddd00500000055000000550000005500000055000000550000005
-500000055000000550000005500000055000000550000005500000055000000500000000500000055000000550000005000d5000500000055000000550000005
-050000500500005005000050050000500500005005000050050000500500005000000000050000500500005005000050000d5000050000500500005005000050
-005005000050050000500500005005000050050000500500005005000050050000766d0000500500005005000050050000766d00005005000050050000500500
-0005500000055000000550000005500000055000000550000005500000055000dd6dd5dd000550000005500000055000006dd500000550000005500000055000
-0005500000055000000550000005500000055000000550000005500000055000556dd555000550000005500000055000006dd500000550000005500000055000
-005005000050050000500500005005000050050000500500005005000050050000d5550000500500005005000050050000d55500005005000050050000500500
-050000500500005005000050050000500500005005000050050000500500005000000000050000500500005005000050000d5000050000500500005005000050
-500000055000000550000005500000055000000550000005500000055000000500000000500000055000000550000005000d5000500000055000000550000005
+500000055000000550000005500000055000000550000005500000055000000500000000000000000000000050000005000d500000dd55000ddd555050000005
+05000050050000500500005005000050050000500500005005000050050000500000000000000000d000000d05000050000d500000065000006dd50005000050
+005005000050050000500500005005000050050000500500005005000050050000766d00d000000dd666666d0050050000766d0000065000006dd50000500500
+0005500000055000000550000005500000055000000550000005500000055000dd6dd5ddd666666ddddddddd00055000006dd50000065000006dd50000055000
+0005500000055000000550000005500000055000000550000005500000055000556dd555555555555dddddd500055000006dd50000065000006dd50000055000
+005005000050050000500500005005000050050000500500005005000050050000d5550050000005555555550050050000d5550000065000006dd50000500500
+050000500500005005000050050000500500005005000050050000500500005000000000000000005000000505000050000d500000065000006dd50005000050
+500000055000000550000005500000055000000550000005500000055000000500000000000000000000000050000005000d500000dd55000ddd555050000005
 50000005500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
 05000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050
 00500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500
