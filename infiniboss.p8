@@ -33,8 +33,10 @@ end
 function initbossmatrix()
 	for i=1,boss.height do
 		boss.tiles.blocks[i] = {}
+		boss.tiles.weps[i] = {}
 		for j=1,boss.width do
 			boss.tiles.blocks[i][j] = 0
+		 boss.tiles.weps[i][j] = 0
 		end
 	end
 end
@@ -57,14 +59,29 @@ function createtestboss()
 	
 	boss.tiles.blocks[5][3] = 90
 	
+	boss.tiles.weps[2][3] = 112
+	boss.tiles.weps[4][3] = 112
+	
 end
 
 function drawboss()
+ -- blocks
 	for colk,colv in pairs(boss.tiles.blocks) do
 		for cellk,cellv in pairs(colv) do
-			spr(cellv, boss.x+8*colk, boss.y+8*cellk)
+			if ( cellv != 0 ) then
+				spr(cellv, boss.x+8*colk, boss.y+8*cellk)
+			end
 		end
 	end
+ -- weps
+	for colk,colv in pairs(boss.tiles.weps) do
+		for cellk,cellv in pairs(colv) do
+			if ( cellv != 0 ) then
+				spr(cellv, boss.x+8*colk, boss.y+8*cellk)
+			end
+		end
+	end
+
 end
 
 function drawdebug()
