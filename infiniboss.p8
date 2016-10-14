@@ -10,13 +10,25 @@ boss = {}
 
 boss.x = 10
 boss.y = 10
-boss.width = 7
-boss.height = 7
+boss.width = 5
+boss.height = 5
 boss.block_density = 1
-boss.wep_quantity = 5
+boss.wep_quantity = 3
 boss["tiles"] = {}
 boss["tiles"]["blocks"] = {}
 boss["tiles"]["weps"] = {}
+
+-- player
+player =  {}
+
+player.x = 64
+player.y = 70
+player.dx = 0
+player.dy = 0
+player.deccel = 0.82
+player.accel = 0.5
+player.maxspd = 4
+player.spr = 128
 
 function _init()
 	cls()
@@ -26,13 +38,18 @@ function _init()
 end
 
 function _update()
-
+	moveplayer()
 end
 
 function _draw()
+	-- cls
+	rectfill(0,0,127,127,0)
+	drawplayer()
 	drawboss()
 	drawdebug()
 end
+
+-- init stuff
 
 function initbossmatrix()
 	for i=1,boss.height do
@@ -44,6 +61,8 @@ function initbossmatrix()
 		end
 	end
 end
+
+-- draw functions
 
 function drawboss()
  -- blocks
@@ -64,6 +83,45 @@ function drawboss()
 	end
 
 end
+
+function drawplayer()
+	spr(player.spr,player.x,player.y,2,2)	
+end
+
+-- update functions
+
+function moveplayer()
+ -- always deccelerate
+ player.dx *= player.deccel
+ player.dy *= player.deccel
+ 
+ -- right
+ if (btn(1) 
+ and player.dx < player.maxspd) then 
+		player.dx+=player.accel
+	end
+	-- left
+ if (btn(0) 
+ and player.dx > -player.maxspd) then 
+		player.dx-=player.accel
+	end
+ -- down
+ if (btn(3) 
+ and player.dy < player.maxspd) then 
+		player.dy+=player.accel
+	end
+	-- up
+ if (btn(2) 
+ and player.dy > -player.maxspd) then 
+		player.dy-=player.accel
+	end	
+	
+	-- apply accel to position
+	player.x+=player.dx
+	player.y+=player.dy
+end
+
+-- boss generation
 
 function generateboss()
 	midcol = flr(boss.width/2)+1
