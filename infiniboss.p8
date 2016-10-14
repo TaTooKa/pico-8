@@ -13,16 +13,16 @@ boss.y = 10
 boss.width = 5
 boss.height = 5
 boss.block_density = 1
+boss.wep_quantity = 3
 boss["tiles"] = {}
 boss["tiles"]["blocks"] = {}
 boss["tiles"]["weps"] = {}
 
 function _init()
 	cls()
-	--srand(seed)
+	srand(seed)
 	initbossmatrix()
-	--createtestboss()
- generateboss()
+	generateboss()
 end
 
 function _update()
@@ -43,29 +43,6 @@ function initbossmatrix()
 		 boss.tiles.weps[i][j] = 0
 		end
 	end
-end
-
-function createtestboss()
-	boss.tiles.blocks[1][3] = 82
-	
-	boss.tiles.blocks[2][2] = 66
-	boss.tiles.blocks[2][3] = 6
-	boss.tiles.blocks[2][4] = 97
-	
-	boss.tiles.blocks[3][1] = 64
-	boss.tiles.blocks[3][2] = 6
-	boss.tiles.blocks[3][3] = 1
-	boss.tiles.blocks[3][4] = 6
-	
-	boss.tiles.blocks[4][2] = 66
-	boss.tiles.blocks[4][3] = 6
-	boss.tiles.blocks[4][4] = 105
-	
-	boss.tiles.blocks[5][3] = 90
-	
-	boss.tiles.weps[2][3] = 112
-	boss.tiles.weps[4][3] = 112
-	
 end
 
 function drawboss()
@@ -113,9 +90,13 @@ function generateboss()
 
 	-- add more terminations randomly
  add_rand_term_blocks()
-		
+
+	-- add weapons
+	add_boss_weps()
+
 	-- mirror boss tiles
 	mirror_boss_tiles()
+
 end
 
 function add_rand_filler_blocks()
@@ -262,10 +243,49 @@ function mirror_boss_tiles()
 				end
 		
 				boss.tiles.blocks[blocknewcol][row] = blockspr
+		 
+		 	-- mirror weapons too!
+		 	wepspr = boss.tiles.weps[col][row]
+		 	if (wepspr != 0) then
+		 		boss.tiles.weps[blocknewcol][row] = wepspr
+		 	end
 		 end
 		end
 	end
+end
 
+function add_boss_weps()
+	halfw = flr(boss.width/2)+1
+	filler_count = 0
+	
+	-- first, count filler blocks
+	for col=1,halfw do
+		for row=1,boss.height do
+			if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
+				filler_count+=1
+			end
+		end
+	end
+
+	wep_spacing = flr(filler_count/boss.wep_quantity)+1
+	filler_count = 0
+	
+	-- populate with weps, spaced
+	for col=1,halfw do
+		for row=1,boss.height do
+			if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
+				filler_count+=1
+				if (filler_count%wep_spacing == 0) then
+					boss.tiles.weps[col][row] = get_rand_wep()
+				end				
+			end
+		end
+	end	
+	
+end
+
+function get_rand_wep()
+	return 112+flr(rnd(4))
 end
 
 function get_rand_block(blocktype)
