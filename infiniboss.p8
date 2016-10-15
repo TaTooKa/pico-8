@@ -3,17 +3,17 @@ version 8
 __lua__
 -- infiniboss
 debugtext = ""
-seed = 4
+seed = 8
 
 -- boss
 boss = {}
 
 boss.x = 10
 boss.y = 10
-boss.width = 5
-boss.height = 5
-boss.block_density = 1
-boss.wep_quantity = 3
+boss.width = 15
+boss.height = 15
+boss.block_density = 7
+boss.wep_quantity = 7
 boss["tiles"] = {}
 boss["tiles"]["blocks"] = {}
 boss["tiles"]["weps"] = {}
@@ -42,27 +42,49 @@ cam.offsetx = 64
 cam.offsety = 90
 cam.leeway = 5
 
+starfield = {}
+
 function _init()
 	cls()
 	camera(cam.x,cam.y)
-	--srand(seed)
+	srand(seed)
 	initbossmatrix()
 	generateboss()
+	initstarfield()
 end
 
 function _update()
 	moveplayer()
 	movecamera()
+	blinkstars()
 end
 
 function _draw()
 	cls()
+	drawstarfield()
 	drawboss()
 	drawplayer()
+		
 	drawdebug()
 end
 
 -- init stuff
+function initstarfield()
+	index=1
+	spacing=18
+	camoffset=-64
+	colors = {0,1,2}
+	for i=0,8 do
+		for j=0,8 do
+			x=i*spacing+(flr(rnd(14))-7)+camoffset
+			y=j*spacing+(flr(rnd(14))-7)+camoffset
+			randcol = flr(rnd(3))+1
+			starfield[index] = {x,y,colors[randcol]}
+			index+=1
+		end
+	end
+
+end
 
 function initbossmatrix()
 	for i=1,boss.height do
@@ -99,6 +121,15 @@ end
 
 function drawplayer()
 	spr(player.spr,player.x,player.y,2,2)	
+end
+
+function drawstarfield()
+	for star in all(starfield) do
+		x = star[1]+cam.x
+		y = star[2]+cam.y
+		col = star[3]
+		rectfill(x,y,x,y,col)
+	end
 end
 
 -- update functions
@@ -156,6 +187,21 @@ function movecamera()
 	
 	camera(cam.x-cam.offsetx,cam.y-cam.offsety)
 		
+end
+
+function blinkstars()
+	timer=time()
+	if timer < 30000 then
+		timer*=8
+	else
+		timer=0
+	end
+	
+	if (timer%2==0) then
+		for star in all(starfield) do
+			star[3] = get_rand_star_br(star[3])
+		end
+	end		
 end
 
 -- boss generation
@@ -218,7 +264,8 @@ function add_rand_filler_blocks()
 end
 
 function add_rand_term_blocks()
-	
+	halfw = flr(boss.width/2)+1
+
 	for col=1,halfw do
 		for row=1,boss.height do
 			left = false
@@ -227,12 +274,12 @@ function add_rand_term_blocks()
 			bottom = false
 
 			if (boss.tiles.blocks[col][row] == 0) then
-				-- if right block is filler...
+								-- if right block is filler...
 				if (col < halfw and get_block_type(boss.tiles.blocks[col+1][row]) == "filler") then
 				 left = true
 				end
 				-- if left block is filler...
-				if (col > 1 and get_block_type(boss.tiles.blocks[col-1][row]) == "filler") then
+				if (col > 1 and col < halfw and get_block_type(boss.tiles.blocks[col-1][row]) == "filler") then
 				 right = true
 				end
 				-- if bottom block is filler...
@@ -459,18 +506,36 @@ function get_block_type(num)
 	return "unknown"
 end
 
+function get_rand_star_br(col)
+ colors = {{0,5,6},{0,1,6},{0,2,13}}
+	blink=flr(rnd(10))
+	
+	if blink==1 then
+		for list in all(colors) do
+			if col==list[1] then	
+				col=list[2]
+			elseif col==list[2] then	
+				col=list[3]
+			elseif col==list[3] then	
+				col=list[1]
+			end
+		end
+	end
+	return col
+end
+
 function drawdebug()
 	print(debugtext, 0, 120)
 end
 __gfx__
-50000005566dd66555d66d5506667770d656656d5d5555d55555555506667770d6d66d6d55555555000d5000d556655d556dd655d5d66d5d5d6dd6d55d6dd6d5
-0500005065d55d565dd56dd576dddd66d66dd66dd6dddd6d55dddd557ddd66d65dd66dd555dddd55000d500055dddd55556dd65566d66d665d6556d55d7dd7d5
-005005006d5885d65d5665d57d6556d6d6d67d6d656767565dd66dd57d6d77d6d6d55d6dd6dddd6d00766d005d5665d5556dd655d6d67d6d5d7dd7d55d7dd7d5
-00055000d589a85d5d5665d57d5d75d6dd65d7dd667dd6665d6d76d57ddd77d65dd55dd55dd55dd5dd6dd5dd6d6d76d655d55d5566d76d665d7557d55d7dd7d5
-00055000d588985d5d5665d56d57d5d7dd7d56dd666dd7665d67d6d56dd77dd7d6d55d6dd6d55d6d556dd5556d67d6d6dd5555ddd6d67d6d5d7557d55d7dd7d5
-005005006d5885d65d5665d56d6556d7d6d76d6d657676565dd66dd56d77ddd75dd55dd55dd55dd500d555005d5665d575577557666766665d7dd7d55d7dd7d5
-0500005065d55d565dd65dd566dddd67d66dd66dd6dddd6d55dddd556d66d6d7d6d66d6dd6dddd6d000d500055dddd5576576567566dd6655d6556d55d7dd7d5
-50000005566dd66555d66d5507776660d656656d5d5555d555555555077766605dd66dd555dddd55000d5000d556655dddd76ddd5dddddd55d6dd6d55d6dd6d5
+50000005566dd66555d66d5506667770d676676d5d5555d50555555006667770d6d66d6d55555555000d5000d006600d557dd755066666605d6dd6d55d6dd6d5
+0500005065d55d565dd56dd576dddd66d66dd66dd6dddd6d55dddd557ddd66d65dd66dd555dddd55000d500000dddd00556dd6556756565d5d6556d55d7dd7d5
+005005006d5885d65d5665d57d6556d6d6d67d6d656767565dd66dd57d6d77d6d6d55d6dd600006d00766d000d5665d0556dd655656560dd5d7dd7d55d7dd7d5
+00055000d589a85d5d5665d57d5d75d6dd65d7dd667dd6665d6d76d57ddd77d65dd55dd55d5555d5dd6dd5dd6d6d76d655d55d5566560d0d5d7557d55d7dd7d5
+00055000d588985d5d5665d56d57d5d7dd7d56dd666dd7665d67d6d56dd77dd7d6d55d6dd600006d556dd5556d67d6d6dd5555dd6560d05d5d7557d55d7dd7d5
+005005006d5885d65d5665d56d6556d7d6d76d6d657676565dd66dd56d77ddd75dd55dd55d5555d500d555000d5665d075577557660d050d5d7dd7d55d7dd7d5
+0500005065d55d565dd65dd566dddd67d66dd66dd6dddd6d55dddd556d66d6d7d6d66d6dd600006d000d500000dddd007657656765d0505d5d6556d55d7dd7d5
+50000005566dd66555d66d5507776660d676676d5d5555d555555555077766605dd66dd555dddd55000d5000d006600dddd76ddd0dddddd05d6dd6d55d6dd6d5
 07d66d505000000550000005500000055000000550000005500000055000000567dddd76dd5765dd500000055000000550000005500000055000000550000005
 76666d6505000050050000500500005005000050050000500500005005000050667dd7667d5765d7050000500500005005000050050000500500005005000050
 76d6dd65005005000050050000500500005005000050050000500500005005006567766676555567005005000050050000500500005005000050050000500500
@@ -495,8 +560,8 @@ d677dd77dd5555dd77dd776d5d77d77dd77d77d5d6dd757dd757dd6d000550000005500000055000
 66677dd7755775577dd776665d77d77dd77d77d55ddd7d7dd7d7ddd5005005000050050000500500005005000050050000500500005005000050050000500500
 566d77dd76576567dd77d6655d77d77dd77d77d5d6d77d7777d77d6d050000500500005005000050050000500500005005000050050000500500005005000050
 5dddd77dddd76dddd77dddd55d77d77dd77d77d555577d7777d77555500000055000000550000005500000055000000550000005500000055000000550000005
-00000000000000000005500000000000000000000000000050000005500000055d6666d5dd6766d55d6666d50d6666d005d66d50555555557666ddd50d5d5d50
-00000000000070000057650000000000000000000000000005000050050000505dd66dd5ddd76d555dd66dd50dd666d005dddd5055d66d55766d6dd500766d00
+00000000000000000005500000000000000000000000000050000005500000055d6666d5dd6766d55d6666d50d66666d05d66d50555555550666dd500d5d5d50
+00000000000070000057650000000000000000000000000005000050050000505dd66dd5ddd76d555dd66dd50dd666dd05dddd5055d66d55766d6dd500766d00
 0000000000008000005765000000000000d00d0000000000005005000050050055dddd550dd76d5005dddd5000dd6dd0005dd5005d6776d57666dd5500766d00
 000000000000d000005765000000000000d00d00000700000005500000055000055dd5500dd76d50005dd500000d6d00000000005d6766d5076d6d5000766d00
 00766d000000d000055765500000000006d00d60000800000005500000055000005dd50000d7650000000000000060000000000055d66d550766dd5000000000
