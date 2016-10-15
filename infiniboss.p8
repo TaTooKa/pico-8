@@ -30,8 +30,21 @@ player.accel = 0.5
 player.maxspd = 4
 player.spr = 128
 
+-- camera
+cam = {}
+cam.x = 0
+cam.y = 0
+cam.dx = 0
+cam.dy = 0
+cam.deccel = 0.8
+cam.accel = 0.3
+cam.offsetx = 64
+cam.offsety = 90
+cam.leeway = 5
+
 function _init()
 	cls()
+	camera(cam.x,cam.y)
 	--srand(seed)
 	initbossmatrix()
 	generateboss()
@@ -39,13 +52,13 @@ end
 
 function _update()
 	moveplayer()
+	movecamera()
 end
 
 function _draw()
-	-- cls
-	rectfill(0,0,127,127,0)
-	drawplayer()
+	cls()
 	drawboss()
+	drawplayer()
 	drawdebug()
 end
 
@@ -119,6 +132,30 @@ function moveplayer()
 	-- apply accel to position
 	player.x+=player.dx
 	player.y+=player.dy
+end
+
+function movecamera()
+	-- always deccelerate
+ cam.dx *= cam.deccel
+ cam.dy *= cam.deccel
+ 
+	-- change spd relative to player position
+	if (cam.x > player.x+cam.leeway) then
+		cam.dx-=cam.accel
+	elseif (cam.x < player.x-cam.leeway) then
+		cam.dx+=cam.accel
+	end
+	if (cam.y > player.y+cam.leeway) then
+		cam.dy-=cam.accel
+	elseif(cam.y < player.y-cam.leeway) then
+		cam.dy+=cam.accel
+	end
+	
+	cam.x+=cam.dx
+	cam.y+=cam.dy
+	
+	camera(cam.x-cam.offsetx,cam.y-cam.offsety)
+		
 end
 
 -- boss generation
