@@ -56,6 +56,8 @@ cam.leeway = 5
 starfield = {}
 
 function _init()
+	settestboss("medium")
+
 	cls()
 	camera(cam.x,cam.y)
 	srand(seed)
@@ -629,6 +631,30 @@ function drawdebug()
 	x = cam.x-60
 	y = cam.y+30
 	print(debugtext, x, y, 7)
+end
+
+function settestboss(size)
+	if size == "small" then
+		boss.width = 5
+		boss.height = 5
+		boss.block_density = 1
+		boss.wep_quantity = 2
+	elseif size == "medium" then
+		boss.width = 9
+		boss.height = 9
+		boss.block_density = 4
+		boss.wep_quantity = 8
+	elseif size == "big" then
+		boss.width = 17
+		boss.height = 17
+		boss.block_density = 10
+		boss.wep_quantity = 15
+	elseif size == "huge" then
+		boss.width = 31
+		boss.height = 31
+		boss.block_density = 15
+		boss.wep_quantity = 25
+	end
 end
 
 function truncdecimals(n,d)
