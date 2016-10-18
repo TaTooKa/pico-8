@@ -69,7 +69,7 @@ function _update()
 	movecamera()
 	blinkstars()
 	playershoot()
- checkcollisions()
+ --checkcollisions()
 end
 
 function _draw()
@@ -202,8 +202,8 @@ function moveplayer()
 	end	
 	
 	-- apply accel to position
-	player.x+=player.dx
-	player.y+=player.dy
+	player.x=round(player.x+player.dx)			
+	player.y=round(player.y+player.dy)
 end
 
 function movecamera()
@@ -223,8 +223,8 @@ function movecamera()
 		cam.dy+=cam.accel
 	end
 	
-	cam.x+=cam.dx
-	cam.y+=cam.dy
+	cam.x+=flr(cam.dx)
+	cam.y+=flr(cam.dy)
 	
 	camera(cam.x-cam.offsetx,cam.y-cam.offsety)
 		
@@ -233,6 +233,7 @@ end
 function playershoot()
 	if (btn(4)) then
 		player.wep1.shooting=true
+		playerwepcollisions()
 	else
 		player.wep1.shooting=false
 	end
@@ -261,36 +262,36 @@ end
 -- collisions
 
 function checkcollisions()
- playerlasercollisions()
+ --playerwepcollisions()
 end
 
-function playerlasercollisions()
+function playerwepcollisions()
  x1=player.x+player.wep1.offsetx
  y1=player.y+player.wep1.offsety
 
-	y2=0
+	--default laser destination
+	player.wep1.y2=cam.y-cam.offsety
 	
 	tilew=8
 	tileh=8
 	
-	in_path=false
-	
  for i=1,boss.width do
  	for j=1,boss.height do
  		if boss.tiles.blocks[i][j].spr != 0 then
- 			--print(boss.tiles.blocks[i][j].spr)
- 			tilex=boss.x+i*8
- 			tiley=boss.y+j*8
- 			if (x1 >= tilex and x1 <= tilex+tilew) then
- 				in_path=true
+ 			tilex=boss.x-1+i*8
+ 			tiley=boss.y-1+j*8
+ 			if (x1 >= tilex 
+ 				and x1 <= tilex+tilew
+ 				and y1 >= tiley+tileh) then
+ 				-- block i,j is being shot!
+ 				--debugtext = "i,j: "..i..","..j
+ 				player.wep1.y2=tiley+tileh
  			end
- 			if in_path then
- 				y2=tiley+tileh
- 			end
+ 		
  		end
  	end
  end
- player.wep1.y2=y2	
+
 end
 
 -- boss generation
@@ -618,18 +619,32 @@ function drawstats()
  cpu = truncdecimals(stat(1)*100,2)
  memtxt = "mem: "..mem.." mb"
  cputxt = "cpu: "..cpu.."%"
- x = cam.x-60
- y = cam.y-89
+ x = cam.x-cam.offsetx
+ y = cam.y-cam.offsety
  print(memtxt, x, y, 11)
  print(cputxt, x, y+6, 11)
 end
 
 function drawdebug()
-	print(debugtext, 0, 120)
+	x = cam.x-60
+	y = cam.y+30
+	print(debugtext, x, y, 7)
 end
 
 function truncdecimals(n,d)
 	return flr(n).."."..flr(n%1 * 10^d)
+end
+
+function round(n)
+	unsigned = abs(n)
+	decimals = unsigned%1
+	rounded = flr(unsigned)
+	
+	if decimals > 0.5 then
+		rounded+=1
+	end
+	
+	return rounded*sgn(n)
 end
 __gfx__
 50000005566dd66555d66d5506667770d676676d5d5555d50555555006667770d6d66d6d55555555000d5000d006600d557dd755066666605d6dd6d55d6dd6d5
