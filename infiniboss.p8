@@ -3,16 +3,16 @@ version 8
 __lua__
 -- infiniboss
 debugtext = ""
-seed = 1
+seed = 3
 
 -- boss
 boss = {}
 
 boss.x = 10
 boss.y = 10
-boss.width = 15
-boss.height = 15
-boss.block_density = 4
+boss.width = 5
+boss.height = 5
+boss.block_density = 1
 boss.wep_quantity = 5
 boss.tiles = {}
 boss.tiles.blocks = {}
@@ -30,9 +30,13 @@ player.accel = 0.5
 player.maxspd = 4
 player.spr = 128
 player.wep1 = {}
+player.wep1.offsetx=7
+player.wep1.offsety=4
 player.wep1.y2 = 0
 player.wep1.shooting=false
 player.wep2 = {}
+player.wep2.offsetx=7
+player.wep2.offsety=12
 player.wep2.x2 = 0
 player.wep2.y2 = 0
 player.wep2.shooting=false
@@ -65,6 +69,7 @@ function _update()
 	movecamera()
 	blinkstars()
 	playershoot()
+ checkcollisions()
 end
 
 function _draw()
@@ -74,6 +79,7 @@ function _draw()
 	drawplayer()
 	drawplayershots()
 		
+	drawstats()
 	drawdebug()
 end
 
@@ -115,7 +121,6 @@ end
 
 function drawboss()
  -- blocks
- --fixme!
 	for colk,colv in pairs(boss.tiles.blocks) do
 		for cellk=1,boss.height do
 			cellv=colv[cellk]
@@ -151,16 +156,16 @@ end
 
 function drawplayershots()
 	if player.wep1.shooting then
-	 x1=player.x+7
-	 y1=player.y+4
+	 x1=player.x+player.wep1.offsetx
+	 y1=player.y+player.wep1.offsety
 	 x2=x1
 	 y2=player.wep1.y2
 		line(x1,y1,x2,y2,10)
 		line(x1+1,y1,x2+1,y2,9)
 	end
 	if player.wep2.shooting then
-		x1=player.x+7
-		y1=player.y+12
+		x1=player.x+player.wep2.offsetx
+		y1=player.y+player.wep2.offsety
 		x2=player.wep2.x2
 		y2=player.wep2.y2
 		line(x1,y1,x2,y2,10)
@@ -251,6 +256,41 @@ function blinkstars()
 			star[3] = get_rand_star_br(star[3])
 		end
 	end		
+end
+
+-- collisions
+
+function checkcollisions()
+ playerlasercollisions()
+end
+
+function playerlasercollisions()
+ x1=player.x+player.wep1.offsetx
+ y1=player.y+player.wep1.offsety
+
+	y2=0
+	
+	tilew=8
+	tileh=8
+	
+	in_path=false
+	
+ for i=1,boss.width do
+ 	for j=1,boss.height do
+ 		if boss.tiles.blocks[i][j].spr != 0 then
+ 			--print(boss.tiles.blocks[i][j].spr)
+ 			tilex=boss.x+i*8
+ 			tiley=boss.y+j*8
+ 			if (x1 >= tilex and x1 <= tilex+tilew) then
+ 				in_path=true
+ 			end
+ 			if in_path then
+ 				y2=tiley+tileh
+ 			end
+ 		end
+ 	end
+ end
+ player.wep1.y2=y2	
 end
 
 -- boss generation
@@ -573,8 +613,23 @@ function get_rand_star_br(col)
 	return col
 end
 
+function drawstats()
+ mem = truncdecimals(stat(0),2)
+ cpu = truncdecimals(stat(1)*100,2)
+ memtxt = "mem: "..mem.." mb"
+ cputxt = "cpu: "..cpu.."%"
+ x = cam.x-60
+ y = cam.y-89
+ print(memtxt, x, y, 11)
+ print(cputxt, x, y+6, 11)
+end
+
 function drawdebug()
 	print(debugtext, 0, 120)
+end
+
+function truncdecimals(n,d)
+	return flr(n).."."..flr(n%1 * 10^d)
 end
 __gfx__
 50000005566dd66555d66d5506667770d676676d5d5555d50555555006667770d6d66d6d55555555000d5000d006600d557dd755066666605d6dd6d55d6dd6d5
