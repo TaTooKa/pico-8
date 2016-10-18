@@ -3,7 +3,7 @@ version 8
 __lua__
 -- infiniboss
 debugtext = ""
-seed = 8
+seed = 1
 
 -- boss
 boss = {}
@@ -12,11 +12,11 @@ boss.x = 10
 boss.y = 10
 boss.width = 15
 boss.height = 15
-boss.block_density = 7
-boss.wep_quantity = 7
-boss["tiles"] = {}
-boss["tiles"]["blocks"] = {}
-boss["tiles"]["weps"] = {}
+boss.block_density = 4
+boss.wep_quantity = 5
+boss.tiles = {}
+boss.tiles.blocks = {}
+boss.tiles.weps = {}
 
 -- player
 player =  {}
@@ -29,6 +29,13 @@ player.deccel = 0.82
 player.accel = 0.5
 player.maxspd = 4
 player.spr = 128
+player.wep1 = {}
+player.wep1.y2 = 0
+player.wep1.shooting=false
+player.wep2 = {}
+player.wep2.x2 = 0
+player.wep2.y2 = 0
+player.wep2.shooting=false
 
 -- camera
 cam = {}
@@ -57,6 +64,7 @@ function _update()
 	moveplayer()
 	movecamera()
 	blinkstars()
+	playershoot()
 end
 
 function _draw()
@@ -64,6 +72,7 @@ function _draw()
 	drawstarfield()
 	drawboss()
 	drawplayer()
+	drawplayershots()
 		
 	drawdebug()
 end
@@ -91,8 +100,13 @@ function initbossmatrix()
 		boss.tiles.blocks[i] = {}
 		boss.tiles.weps[i] = {}
 		for j=1,boss.width do
-			boss.tiles.blocks[i][j] = 0
-		 boss.tiles.weps[i][j] = 0
+			boss.tiles.blocks[i][j] = {}
+			boss.tiles.weps[i][j] = {}
+			
+			boss.tiles.blocks[i][j].spr = 0
+		 boss.tiles.blocks[i][j].hp = 0
+		 boss.tiles.weps[i][j].spr = 0
+		 boss.tiles.weps[i][j].hp = 0
 		end
 	end
 end
@@ -101,18 +115,21 @@ end
 
 function drawboss()
  -- blocks
+ --fixme!
 	for colk,colv in pairs(boss.tiles.blocks) do
-		for cellk,cellv in pairs(colv) do
-			if ( cellv != 0 ) then
-				spr(cellv, boss.x+8*colk, boss.y+8*cellk)
+		for cellk=1,boss.height do
+			cellv=colv[cellk]
+			if ( cellv.spr != 0 ) then
+				spr(cellv.spr, boss.x+8*colk, boss.y+8*cellk)
 			end
 		end
 	end
  -- weps
 	for colk,colv in pairs(boss.tiles.weps) do
-		for cellk,cellv in pairs(colv) do
-			if ( cellv != 0 ) then
-				spr(cellv, boss.x+8*colk, boss.y+8*cellk)
+		for cellk=1,boss.height do
+			cellv=colv[cellk]
+			if ( cellv.spr != 0 ) then
+				spr(cellv.spr, boss.x+8*colk, boss.y+8*cellk)
 			end
 		end
 	end
@@ -129,6 +146,25 @@ function drawstarfield()
 		y = star[2]+cam.y
 		col = star[3]
 		rectfill(x,y,x,y,col)
+	end
+end
+
+function drawplayershots()
+	if player.wep1.shooting then
+	 x1=player.x+7
+	 y1=player.y+4
+	 x2=x1
+	 y2=player.wep1.y2
+		line(x1,y1,x2,y2,10)
+		line(x1+1,y1,x2+1,y2,9)
+	end
+	if player.wep2.shooting then
+		x1=player.x+7
+		y1=player.y+12
+		x2=player.wep2.x2
+		y2=player.wep2.y2
+		line(x1,y1,x2,y2,10)
+		line(x1+1,y1,x2+1,y2,9)
 	end
 end
 
@@ -189,6 +225,19 @@ function movecamera()
 		
 end
 
+function playershoot()
+	if (btn(4)) then
+		player.wep1.shooting=true
+	else
+		player.wep1.shooting=false
+	end
+	if (btn(5)) then
+		player.wep2.shooting=true
+	else
+		player.wep2.shooting=false
+	end
+end
+
 function blinkstars()
 	timer=time()
 	if timer < 30000 then
@@ -211,12 +260,12 @@ function generateboss()
 	midrow = flr(boss.height/2)+1
 	
 	-- add core
-	boss.tiles.blocks[midcol][midrow] = 1	
+	boss.tiles.blocks[midcol][midrow].spr = 1	
 
  -- add filler blocks
- boss.tiles.blocks[midcol][midrow-1] = get_rand_block("filler")
- boss.tiles.blocks[midcol][midrow+1] = get_rand_block("filler")
- boss.tiles.blocks[midcol-1][midrow] = get_rand_block("filler")
+ boss.tiles.blocks[midcol][midrow-1].spr = get_rand_block("filler")
+ boss.tiles.blocks[midcol][midrow+1].spr = get_rand_block("filler")
+ boss.tiles.blocks[midcol-1][midrow].spr = get_rand_block("filler")
  
  -- add more fillers randomly
  for i=1,boss.block_density do
@@ -246,7 +295,7 @@ function add_rand_filler_blocks()
 	
 	for col=1,halfw do
 		for row=1,boss.height do
-			if (boss.tiles.blocks[col][row] != 0) then
+			if (boss.tiles.blocks[col][row].spr != 0) then
 				rand_offset_x = rand_offsets[flr(rnd(3))+1]
 				rand_offset_y = rand_offsets[flr(rnd(3))+1]
 				newcol = col + rand_offset_x
@@ -255,8 +304,8 @@ function add_rand_filler_blocks()
 	   	newcol <= halfw and
 	   	newrow >= 1 and
 	   	newrow <= boss.height and
-	   	boss.tiles.blocks[newcol][newrow] == 0) then
-					boss.tiles.blocks[newcol][newrow] = get_rand_block("filler")	   
+	   	boss.tiles.blocks[newcol][newrow].spr == 0) then
+					boss.tiles.blocks[newcol][newrow].spr = get_rand_block("filler")	   
 	   end		 
 			end
 		end
@@ -273,40 +322,40 @@ function add_rand_term_blocks()
 			top = false
 			bottom = false
 
-			if (boss.tiles.blocks[col][row] == 0) then
+			if (boss.tiles.blocks[col][row].spr == 0) then
 								-- if right block is filler...
-				if (col < halfw and get_block_type(boss.tiles.blocks[col+1][row]) == "filler") then
+				if (col < halfw and get_block_type(boss.tiles.blocks[col+1][row].spr) == "filler") then
 				 left = true
 				end
 				-- if left block is filler...
-				if (col > 1 and col < halfw and get_block_type(boss.tiles.blocks[col-1][row]) == "filler") then
+				if (col > 1 and col < halfw and get_block_type(boss.tiles.blocks[col-1][row].spr) == "filler") then
 				 right = true
 				end
 				-- if bottom block is filler...
-				if (row < boss.height and get_block_type(boss.tiles.blocks[col][row+1]) == "filler") then
+				if (row < boss.height and get_block_type(boss.tiles.blocks[col][row+1].spr) == "filler") then
 					top = true
 				end
 			 -- if top block is filler...
-				if (row > 1 and get_block_type(boss.tiles.blocks[col][row-1]) == "filler") then
+				if (row > 1 and get_block_type(boss.tiles.blocks[col][row-1].spr) == "filler") then
 					bottom = true
 				end
 				
 				if (left and right) then		
-					boss.tiles.blocks[col][row] = get_rand_block("leftright")
+					boss.tiles.blocks[col][row].spr = get_rand_block("leftright")
 				elseif (top and bottom) then		
-					boss.tiles.blocks[col][row] = get_rand_block("topbottom")
+					boss.tiles.blocks[col][row].spr = get_rand_block("topbottom")
 				elseif (left and bottom) then
-					boss.tiles.blocks[col][row] = get_rand_block("bottoml")
+					boss.tiles.blocks[col][row].spr = get_rand_block("bottoml")
 				elseif (right and bottom) then		
-					boss.tiles.blocks[col][row] = get_rand_block("bottomr")
+					boss.tiles.blocks[col][row].spr = get_rand_block("bottomr")
 				elseif (left) then		
-					boss.tiles.blocks[col][row] = get_rand_block("left")
+					boss.tiles.blocks[col][row].spr = get_rand_block("left")
 				elseif (right) then		
-					boss.tiles.blocks[col][row] = get_rand_block("right")
+					boss.tiles.blocks[col][row].spr = get_rand_block("right")
 				elseif (top) then		
-					boss.tiles.blocks[col][row] = get_rand_block("top")
+					boss.tiles.blocks[col][row].spr = get_rand_block("top")
 				elseif (bottom) then		
-					boss.tiles.blocks[col][row] = get_rand_block("bottom")
+					boss.tiles.blocks[col][row].spr = get_rand_block("bottom")
 				end				
 			end	 
 	 end
@@ -316,8 +365,8 @@ end
 function remove_floating_blocks()
 	for col=1,boss.width do
 		for row=1,boss.height do
-			if ( boss.tiles.blocks[col][row] != 0 and not has_adjacent_blocks(col,row) ) then
-				boss.tiles.blocks[col][row] = 0
+			if ( boss.tiles.blocks[col][row].spr != 0 and not has_adjacent_blocks(col,row) ) then
+				boss.tiles.blocks[col][row].spr = 0
 			end
 		end
 	end
@@ -325,16 +374,16 @@ end
 
 function has_adjacent_blocks(col,row)
 	result = false
-	if (col-1 > 0 and boss.tiles.blocks[col-1][row] != 0) then
+	if (col-1 > 0 and boss.tiles.blocks[col-1][row].spr != 0) then
   result = true
  end
-	if (col+1 < boss.width+1 and boss.tiles.blocks[col+1][row] != 0) then
+	if (col+1 < boss.width+1 and boss.tiles.blocks[col+1][row].spr != 0) then
   result = true
  end
-	if (row-1 > 0 and boss.tiles.blocks[col][row-1] != 0) then
+	if (row-1 > 0 and boss.tiles.blocks[col][row-1].spr != 0) then
   result = true
  end
-	if (row+1 < boss.height+1 and boss.tiles.blocks[col][row+1] != 0) then
+	if (row+1 < boss.height+1 and boss.tiles.blocks[col][row+1].spr != 0) then
   result = true
  end
  return result
@@ -345,19 +394,19 @@ function change_border_blocks()
 	
 	for col=1,halfw do
 		for row=1,boss.height do
-			if (boss.tiles.blocks[col][row] != 0) then
+			if (boss.tiles.blocks[col][row].spr != 0) then
 			
 				if (col == 1) then
-					if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
-			 		boss.tiles.blocks[col][row] = get_rand_block("left")
+					if (get_block_type(boss.tiles.blocks[col][row].spr) == "filler") then
+			 		boss.tiles.blocks[col][row].spr = get_rand_block("left")
 			 	end	
 				elseif (row == 1) then
-					if (get_block_type(boss.tiles.blocks[col][row]) != "top") then
-			 		boss.tiles.blocks[col][row] = get_rand_block("top")
+					if (get_block_type(boss.tiles.blocks[col][row].spr) != "top") then
+			 		boss.tiles.blocks[col][row].spr = get_rand_block("top")
 			 	end	
 				elseif (row == boss.height) then
-					if (get_block_type(boss.tiles.blocks[col][row]) != "bottom") then
-			 		boss.tiles.blocks[col][row] = get_rand_block("bottom")
+					if (get_block_type(boss.tiles.blocks[col][row].spr) != "bottom") then
+			 		boss.tiles.blocks[col][row].spr = get_rand_block("bottom")
 			 	end	
 				end
 			
@@ -371,7 +420,7 @@ function mirror_boss_tiles()
 	
 	for col=1,halfw do
 		for row=1,boss.height do
-			blockspr = boss.tiles.blocks[col][row]
+			blockspr = boss.tiles.blocks[col][row].spr
 			blocknewcol = boss.width+1-col
 			if (blockspr != 0) then
 				blocktype = get_block_type(blockspr)
@@ -384,12 +433,12 @@ function mirror_boss_tiles()
 					blockspr-=8					
 				end
 		
-				boss.tiles.blocks[blocknewcol][row] = blockspr
+				boss.tiles.blocks[blocknewcol][row].spr = blockspr
 		 
 		 	-- mirror weapons too!
-		 	wepspr = boss.tiles.weps[col][row]
+		 	wepspr = boss.tiles.weps[col][row].spr
 		 	if (wepspr != 0) then
-		 		boss.tiles.weps[blocknewcol][row] = wepspr
+		 		boss.tiles.weps[blocknewcol][row].spr = wepspr
 		 	end
 		 end
 		end
@@ -403,7 +452,7 @@ function add_boss_weps()
 	-- first, count filler blocks
 	for col=1,halfw do
 		for row=1,boss.height do
-			if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
+			if (get_block_type(boss.tiles.blocks[col][row].spr) == "filler") then
 				filler_count+=1
 			end
 		end
@@ -415,10 +464,10 @@ function add_boss_weps()
 	-- populate with weps, spaced
 	for col=1,halfw do
 		for row=1,boss.height do
-			if (get_block_type(boss.tiles.blocks[col][row]) == "filler") then
+			if (get_block_type(boss.tiles.blocks[col][row].spr) == "filler") then
 				filler_count+=1
 				if (filler_count%wep_spacing == 0) then
-					boss.tiles.weps[col][row] = get_rand_wep()
+					boss.tiles.weps[col][row].spr = get_rand_wep()
 				end				
 			end
 		end
