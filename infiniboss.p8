@@ -17,6 +17,11 @@ boss.wep_quantity = 5
 boss.tiles = {}
 boss.tiles.blocks = {}
 boss.tiles.weps = {}
+boss.dx = 0
+boss.dy = 0
+boss.accel = 0.2
+boss.deccel = 0.7
+boss.maxspd = 3
 
 -- player
 player =  {}
@@ -48,15 +53,15 @@ cam.y = 0
 cam.dx = 0
 cam.dy = 0
 cam.deccel = 0.8
-cam.accel = 0.3
-cam.offsetx = 64
+cam.accel = 0.6
+cam.offsetx = 54
 cam.offsety = 90
 cam.leeway = 5
 
 starfield = {}
-
+			
 function _init()
-	settestboss("medium")
+	settestboss("big")
 
 	cls()
 	camera(cam.x,cam.y)
@@ -69,6 +74,7 @@ end
 function _update()
 	moveplayer()
 	movecamera()
+	moveboss()
 	blinkstars()
 	playershoot()
  --checkcollisions()
@@ -83,6 +89,7 @@ function _draw()
 		
 	drawstats()
 	drawdebug()
+	rectfill(0,0,50,50,3)
 end
 
 -- init stuff
@@ -225,11 +232,63 @@ function movecamera()
 		cam.dy+=cam.accel
 	end
 	
-	cam.x+=flr(cam.dx)
-	cam.y+=flr(cam.dy)
+	cam.x=round(cam.x+cam.dx)
+	cam.y=round(cam.y+cam.dy)
 	
 	camera(cam.x-cam.offsetx,cam.y-cam.offsety)
 		
+end
+
+function moveboss()
+	centerx=boss.x+boss.width*8
+	centery=boss.y+boss.height*8
+	
+		-- always deccelerate
+ boss.dx *= boss.deccel
+ boss.dy *= boss.deccel
+	
+	if (boss_is_far_from_player()) then
+		-- approach player
+		debugtext = "approach"
+		
+		if (centerx < player.x 
+			and boss.dx < boss.maxspd) then
+			boss.dx += boss.accel
+		elseif (centerx >= player.x
+			and boss.dx > -boss.maxspd) then
+			boss.dx -= boss.accel
+		end
+		if (centery < player.y
+			and boss.dy < boss.maxspd) then
+			boss.dy += boss.accel
+		elseif (centery >= player.y
+			and boss.dy > -boss.maxspd) then
+			boss.dy -= boss.accel
+		end
+			
+	else
+		-- roam randomly
+		debugtext = "roam"
+		
+	end
+	-- apply deltas to position
+	boss.x=round(boss.x+boss.dx)			
+	boss.y=round(boss.y+boss.dy)
+
+end
+
+function boss_is_far_from_player()
+	centerx=boss.x+boss.width*4
+	centery=boss.y+boss.height*4
+	
+	max_distance=10*boss.width
+	
+	if (abs(centerx-player.x) > max_distance
+		or abs(centery-player.y) > max_distance) then
+		return true
+	else
+		return false
+	end
 end
 
 function playershoot()
@@ -628,8 +687,8 @@ function drawstats()
 end
 
 function drawdebug()
-	x = cam.x-60
-	y = cam.y+30
+	x = cam.x-cam.offsetx
+	y = cam.y-cam.offsety+122
 	print(debugtext, x, y, 7)
 end
 
