@@ -22,6 +22,7 @@ boss.dy = 0
 boss.accel = 0.2
 boss.deccel = 0.7
 boss.maxspd = 3
+boss.defaultblockhp = 10
 
 -- player
 player =  {}
@@ -61,7 +62,7 @@ cam.leeway = 5
 starfield = {}
 			
 function _init()
-	settestboss("medium")
+	settestboss("huge")
 
 	camera(cam.x,cam.y)
 	srand(seed)
@@ -316,10 +317,33 @@ function blinkstars()
 	end		
 end
 
+function damage_block(col,row,dmg)
+	-- check for wep
+	if boss.tiles.weps[col][row].spr != 0 then
+		boss.tiles.weps[col][row].hp -= dmg
+		if boss.tiles.weps[col][row].hp <= 0 then	
+			destroy_wep(col,row)
+		end
+	else	
+		boss.tiles.blocks[col][row].hp -= dmg
+		if boss.tiles.blocks[col][row].hp <= 0 then
+			destroy_block(col,row)
+		end
+	end
+end
+
+function destroy_block(col,row)
+	boss.tiles.blocks[col][row].spr = 0
+end
+
+function destroy_wep(col,row)
+	boss.tiles.weps[col][row].spr = 0
+end
+
 -- collisions
 
 function checkcollisions()
- --playerwepcollisions()
+
 end
 
 function playerwepcollisions()
@@ -332,6 +356,8 @@ function playerwepcollisions()
 	tilew=8
 	tileh=8
 	
+	damagedblock=nil
+	
  for i=1,boss.width do
  	for j=1,boss.height do
  		if boss.tiles.blocks[i][j].spr != 0 then
@@ -343,12 +369,18 @@ function playerwepcollisions()
  				-- block i,j is being shot!
  				--debugtext = "i,j: "..i..","..j
  				player.wep1.y2=tiley+tileh
- 			end
+ 				damagedblock={i,j}
+ 				
+ 				end
  		
  		end
  	end
  end
-
+	
+	if damagedblock then
+		damage_block(damagedblock[1],damagedblock[2],1)
+	end
+	
 end
 
 -- boss generation
@@ -385,6 +417,8 @@ function generateboss()
 	-- mirror boss tiles
 	mirror_boss_tiles()
 
+	-- give tiles initial hp
+	give_initial_tile_hp()
 end
 
 function add_rand_filler_blocks()
@@ -542,6 +576,20 @@ function mirror_boss_tiles()
 		end
 	end
 end
+
+function give_initial_tile_hp()
+	for i=1,boss.width do
+		for j=1,boss.height do
+			if boss.tiles.blocks[i][j].spr != 0 then
+				boss.tiles.blocks[i][j].hp = boss.defaultblockhp
+			end
+			if boss.tiles.weps[i][j].spr != 0 then
+				boss.tiles.weps[i][j].hp = boss.defaultblockhp
+			end
+		end
+	end
+end
+
 
 function add_boss_weps()
 	halfw = flr(boss.width/2)+1
