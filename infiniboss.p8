@@ -61,9 +61,8 @@ cam.leeway = 5
 starfield = {}
 			
 function _init()
-	settestboss("big")
+	settestboss("medium")
 
-	cls()
 	camera(cam.x,cam.y)
 	srand(seed)
 	initbossmatrix()
@@ -83,13 +82,13 @@ end
 function _draw()
 	cls()
 	drawstarfield()
+	rectfill(0,0,50,50,3)
 	drawboss()
 	drawplayer()
 	drawplayershots()
 		
 	drawstats()
 	drawdebug()
-	rectfill(0,0,50,50,3)
 end
 
 -- init stuff
@@ -249,8 +248,6 @@ function moveboss()
 	
 	if (boss_is_far_from_player()) then
 		-- approach player
-		debugtext = "approach"
-		
 		if (centerx < player.x 
 			and boss.dx < boss.maxspd) then
 			boss.dx += boss.accel
@@ -268,20 +265,19 @@ function moveboss()
 			
 	else
 		-- roam randomly
-		debugtext = "roam"
-		
+		-- todo?
 	end
+	
 	-- apply deltas to position
 	boss.x=round(boss.x+boss.dx)			
 	boss.y=round(boss.y+boss.dy)
-
 end
 
 function boss_is_far_from_player()
 	centerx=boss.x+boss.width*4
 	centery=boss.y+boss.height*4
 	
-	max_distance=10*boss.width
+	max_distance=8*boss.width
 	
 	if (abs(centerx-player.x) > max_distance
 		or abs(centery-player.y) > max_distance) then
