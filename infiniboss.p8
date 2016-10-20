@@ -84,12 +84,12 @@ end
 function _draw()
 	cls()
 	drawstarfield()
-	rectfill(0,0,50,50,3)
+	--rectfill(0,0,50,50,3)
 	drawboss()
 	drawplayer()
 	drawplayershots()
 		
-	drawstats()
+	--drawstats()
 	drawdebug()
 end
 
