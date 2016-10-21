@@ -4,6 +4,7 @@ __lua__
 -- infiniboss
 debugtext = ""
 seed = 3
+pi = 3.14159265359
 
 -- boss
 boss = {}
@@ -23,7 +24,9 @@ boss.accel = 0.2
 boss.deccel = 0.7
 boss.maxspd = 3
 boss.defaultblockhp = 10
-
+boss.bullets = {}
+boss.bulletmax = 100
+boss.bulletspd = 1
 -- player
 player =  {}
 
@@ -65,19 +68,30 @@ sparks = {}
 function _init()
 	settestboss("medium")
 
+	init_timers()
+	
 	camera(cam.x,cam.y)
 	srand(seed)
+	
 	initbossmatrix()
 	generateboss()
 	initstarfield()
+
+	add_global_timers()
 end
 
 function _update()
+	update_timers()
+	
 	moveplayer()
 	movecamera()
 	moveboss()
 	blinkstars()
 	playershoot()
+ bossshoot()
+ movebossshots()
+ 
+ cleanupshots()
  --checkcollisions()
 end
 
@@ -88,12 +102,23 @@ function _draw()
 	drawboss()
 	drawplayer()
 	drawplayershots()
+	drawbossshots()
 		
-	--drawstats()
+	drawstats()
 	drawdebug()
 end
 
 -- init stuff
+function add_global_timers()
+	--bossshoot()
+	--add_timer("bossshoot",1,bossshoot())
+	--recursiveshots()
+end
+
+function recursiveshots()
+	--add_timer("bossshoot",1,bossshoot(),recursiveshots())
+end
+
 function initstarfield()
 	index=1
 	spacing=18
@@ -184,9 +209,18 @@ function drawplayershots()
 	end
 end
 
+function drawbossshots()
+	-- boss.bullets,
+	-- boss.beams,
+	-- boss.missiles
+	for bullet in all(boss.bullets) do
+		spr(132,bullet.x,bullet.y)
+	end
+end
+
 function drawsparks()
 	if (sparks[1] != nil) then
-		spr(130,sparks[1],sparks[2])
+		spr(131,sparks[1],sparks[2])
 	end
 end
 
@@ -310,6 +344,55 @@ function playershoot()
 	end
 end
 
+function bossshoot()
+	for i=1,boss.width do
+		for j=1,boss.height do
+			wep = boss.tiles.weps[i][j]
+			wepx = boss.x+i*8
+			wepy = boss.y+j*8
+			if wep.spr != 0
+				and wep.hp > 0 then
+					-- wep types
+					if wep.spr == 112 then
+						-- bossshootbeam()
+					elseif wep.spr == 113 then
+						bossshootbullet(wepx,wepy)
+					elseif wep.spr == 114 then
+						-- bossshootmissile()
+					end
+					
+			end		
+		end
+	end
+end
+
+function bossshootbullet(wepx,wepy)
+ -- original player pos
+ px = player.x
+ py = player.y
+ 
+	-- create bullet with direction
+	bullet = {}
+	bullet.x = wepx
+	bullet.y = wepy
+	bullet.angle = get_angle(bullet.x,bullet.y,px,py)
+ 
+	if #boss.bullets <= boss.bulletmax then
+		add(boss.bullets, bullet)
+	end
+end
+
+function movebossshots()
+	for bullet in all(boss.bullets) do
+		bullet.x += boss.bulletspd * cos(bullet.angle)
+		bullet.y += boss.bulletspd * sin(bullet.angle)
+	end
+end
+
+function cleanupshots()
+	-- todo (based on distance from player?)
+end
+
 function blinkstars()
 	timer=time()
 	if timer < 30000 then
@@ -381,7 +464,7 @@ function playerwepcollisions()
  				player.wep1.y2=tiley+tileh
  				damagedblock={i,j}
  				dmgx=x1-3
- 				dmgy=tiley+6
+ 				dmgy=tiley+4
  				
  				end
  		
@@ -637,7 +720,7 @@ function add_boss_weps()
 end
 
 function get_rand_wep()
-	return 112+flr(rnd(4))
+	return 112+flr(rnd(3))
 end
 
 function get_rand_block(blocktype)
@@ -775,6 +858,12 @@ function settestboss(size)
 	end
 end
 
+function get_angle(x1,y1,x2,y2)
+	dx = x2 - x1
+	dy = y2 - y1
+	return atan2(dx, dy) * 180 / pi
+end
+
 function truncdecimals(n,d)
 	return flr(n).."."..flr(n%1 * 10^d)
 end
@@ -789,6 +878,68 @@ function round(n)
 	end
 	
 	return rounded*sgn(n)
+end
+
+-- timers api
+local timers = {}
+local last_time = nil
+
+function init_timers ()
+  last_time = time()
+end
+
+function add_timer (name,
+    length, step_fn, end_fn,
+    start_paused)
+  local timer = {
+    length=length,
+    elapsed=0,
+    active=not start_paused,
+    step_fn=step_fn,
+    end_fn=end_fn
+  }
+  timers[name] = timer
+  return timer
+end
+
+function update_timers ()
+  local t = time()
+  local dt = t - last_time
+  last_time = t
+  for name,timer in pairs(timers) do
+    if timer.active then
+      timer.elapsed += dt
+      local elapsed = timer.elapsed
+      local length = timer.length
+      if elapsed < length then
+        if timer.step_fn then
+          timer.step_fn(dt,elapsed,length,timer)
+        end  
+    else
+        timer.active = false
+        if timer.end_fn then
+          timer.end_fn(dt,elapsed,length,timer)
+        end
+      end
+    end
+  end
+end
+
+function pause_timer (name)
+  local timer = timers[name]
+  if (timer) timer.active = false
+end
+
+function resume_timer (name)
+  local timer = timers[name]
+  if (timer) timer.active = true
+end
+
+function restart_timer (name, start_paused)
+  local timer = timers[name]
+  if (not timer) return
+  timer.elapsed = 0
+  timer.active = not start_paused
 end
 __gfx__
 50000005566dd66555d66d5506667770d676676d5d5555d50555555006667770d6d66d6d55555555000d5000d006600d557dd755066666605d6dd6d55d6dd6d5
@@ -856,12 +1007,12 @@ d677dd77dd5555dd77dd776d5d77d77dd77d77d5d6dd757dd757dd6d000550000005500000055000
 050dd05005066050050dd0500505d050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050
 00000000000000000000000000000000500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
 0000700000070000000000000000000000000000000a900000009000500000055000000550000005500000055000000550000005500000055000000550000005
-0000e000000e0000040900400000000000000000000820000000a000050000500500005005000050050000500500005005000050050000500500005005000050
-0000e000000e000000a90a00000aa000000880000006500000008000005005000050050000500500005005000050050000500500005005000050050000500500
-0000800000080000000a899000a77a000087e8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-00008200002800000998a00000a77a00008ee8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-000782044028700000a09a00000aa000000880000008200000005000005005000050050000500500005005000050050000500500005005000050050000500500
-000f82477428f0000400904000000000000000000008200000006000050000500500005005000050050000500500005005000050050000500500005005000050
+0000e000000e0000000000000000000000000000000820000000a000050000500500005005000050050000500500005005000050050000500500005005000050
+0000e000000e000000099000000aa000000880000006500000008000005005000050050000500500005005000050050000500500005005000050050000500500
+0000800000080000009aa90000a77a000087e8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
+0000820000280000040a904000a77a00008ee8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
+000782044028700000900900000aa000000880000008200000005000005005000050050000500500005005000050050000500500005005000050050000500500
+000f82477428f0000400004000000000000000000008200000006000050000500500005005000050050000500500005005000050050000500500005005000050
 000a84fccf48a0000000000000000000000000000000800000008000500000055000000550000005500000055000000550000005500000055000000550000005
 00faa2adda2aaf005000000550000005500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
 009a989dd989a9000500005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050
