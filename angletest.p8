@@ -6,24 +6,28 @@ pi = 3.14159265359
 debugtext = ""
 
 dest = {}
-dest.x = 100
-dest.y = 100
+dest.x = 20
+dest.y = 50
 
 bullet = {}
-bullet.x = 10
-bullet.y = 10
+bullet.x = 100
+bullet.y = 100
 bullet.spr = 1
-bullet.spd = 1
+bullet.spd = 0
+bullet.angle = 0
+bullet.prox = 0.2
 
 function _init()
 end
 
 function _update()
 	movebullet()
+	movedest()
 end
 
 function _draw()
 	cls()
+	line(bullet.x,bullet.y,dest.x,dest.y,5)
 	drawbullet()
 	drawdest()
 	printdebug()
@@ -31,9 +35,25 @@ end
 
 function movebullet()
 	angle = get_angle(bullet.x,bullet.y,dest.x,dest.y)
-	debugtext = angle
-	bullet.x += bullet.spd * cos(angle)
-	bullet.y += bullet.spd * sin(angle)
+	bullet.angle = get_angle_lerp(bullet.angle,angle,bullet.prox)
+	debugtext = bullet.angle
+	bullet.x += bullet.spd * cos(bullet.angle)
+	bullet.y += bullet.spd * sin(bullet.angle)
+end
+
+function movedest()
+	if btn(0) then
+		dest.x -= 1
+	end
+	if btn(1) then
+		dest.x += 1
+	end
+	if btn(2) then
+		dest.y -= 1
+	end
+	if btn(3) then
+	 dest.y += 1
+	end
 end
 
 function drawbullet()
@@ -47,7 +67,22 @@ end
 function get_angle(x1,y1,x2,y2)
 	dx = x2 - x1
 	dy = y2 - y1
-	return atan2(dx, dy) * 180 / pi
+	return atan2(dx, dy)-- * 180 / pi
+end
+
+function get_angle_lerp(angle1, angle2, t)
+	angle1=angle1%1
+	angle2=angle2%1
+	
+	if abs(angle1-angle2) > 0.5 then
+		if angle1 > angle2 then
+			angle2+=1
+		else
+			angle1+=1
+		end
+	end
+	
+	return ((1-t)*angle1+t*angle2)%1	
 end
 
 function printdebug()

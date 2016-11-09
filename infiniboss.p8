@@ -3,8 +3,9 @@ version 8
 __lua__
 -- infiniboss
 debugtext = ""
-seed = 3
+seed = 6
 pi = 3.14159265359
+timer = 0
 
 -- boss
 boss = {}
@@ -27,6 +28,8 @@ boss.defaultblockhp = 10
 boss.bullets = {}
 boss.bulletmax = 100
 boss.bulletspd = 1
+shotmaxdist = 200
+
 -- player
 player =  {}
 
@@ -66,7 +69,7 @@ starfield = {}
 sparks = {}
 			
 function _init()
-	settestboss("medium")
+	settestboss("small")
 
 	init_timers()
 	
@@ -76,11 +79,10 @@ function _init()
 	initbossmatrix()
 	generateboss()
 	initstarfield()
-
-	add_global_timers()
 end
 
 function _update()
+	timer=time()
 	update_timers()
 	
 	moveplayer()
@@ -109,15 +111,6 @@ function _draw()
 end
 
 -- init stuff
-function add_global_timers()
-	--bossshoot()
-	--add_timer("bossshoot",1,bossshoot())
-	--recursiveshots()
-end
-
-function recursiveshots()
-	--add_timer("bossshoot",1,bossshoot(),recursiveshots())
-end
 
 function initstarfield()
 	index=1
@@ -356,7 +349,9 @@ function bossshoot()
 					if wep.spr == 112 then
 						-- bossshootbeam()
 					elseif wep.spr == 113 then
-						bossshootbullet(wepx,wepy)
+						if nsec(1) then
+							bossshootbullet(wepx,wepy)
+						end
 					elseif wep.spr == 114 then
 						-- bossshootmissile()
 					end
@@ -367,15 +362,13 @@ function bossshoot()
 end
 
 function bossshootbullet(wepx,wepy)
- -- original player pos
- px = player.x
- py = player.y
- 
-	-- create bullet with direction
+ 	-- create bullet with direction
 	bullet = {}
 	bullet.x = wepx
 	bullet.y = wepy
-	bullet.angle = get_angle(bullet.x,bullet.y,px,py)
+	newangle = get_angle(bullet.x,bullet.y,player.x,player.y)
+ bullet.angle = get_angle_lerp(0,newangle,0.2)
+ --debugtext=bullet.angle
  
 	if #boss.bullets <= boss.bulletmax then
 		add(boss.bullets, bullet)
@@ -384,24 +377,23 @@ end
 
 function movebossshots()
 	for bullet in all(boss.bullets) do
+		--debugtext=bullet.angle
 		bullet.x += boss.bulletspd * cos(bullet.angle)
 		bullet.y += boss.bulletspd * sin(bullet.angle)
 	end
 end
 
 function cleanupshots()
-	-- todo (based on distance from player?)
+	for bullet in all(boss.bullets) do
+		if abs(bullet.x-player.x) > shotmaxdist
+			or abs(bullet.y-player.y) > shotmaxdist then
+			del(boss.bullets, bullet)
+		end
+	end
 end
 
 function blinkstars()
-	timer=time()
-	if timer < 30000 then
-		timer*=8
-	else
-		timer=0
-	end
-	
-	if (timer%2==0) then
+	if nsec(0.5) then
 		for star in all(starfield) do
 			star[3] = get_rand_star_br(star[3])
 		end
@@ -861,7 +853,22 @@ end
 function get_angle(x1,y1,x2,y2)
 	dx = x2 - x1
 	dy = y2 - y1
-	return atan2(dx, dy) * 180 / pi
+	return atan2(dx, dy)-- * 180 / pi
+end
+
+function get_angle_lerp(angle1,angle2,t)
+	angle1=angle1%1
+	angle2=angle2%1
+	
+	if abs(angle1-angle2) > 0.5 then
+		if angle1 > angle2 then
+			angle2+=1
+		else
+			angle1+=1
+		end
+	end
+	
+	return ((1-t)*angle1 + t*angle2) %1
 end
 
 function truncdecimals(n,d)
@@ -878,6 +885,14 @@ function round(n)
 	end
 	
 	return rounded*sgn(n)
+end
+
+function nsec(n)
+	if timer%n==0 then
+		return true
+	else
+		return false
+	end
 end
 
 -- timers api
@@ -1008,10 +1023,10 @@ d677dd77dd5555dd77dd776d5d77d77dd77d77d5d6dd757dd757dd6d000550000005500000055000
 00000000000000000000000000000000500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
 0000700000070000000000000000000000000000000a900000009000500000055000000550000005500000055000000550000005500000055000000550000005
 0000e000000e0000000000000000000000000000000820000000a000050000500500005005000050050000500500005005000050050000500500005005000050
-0000e000000e000000099000000aa000000880000006500000008000005005000050050000500500005005000050050000500500005005000050050000500500
-0000800000080000009aa90000a77a000087e8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-0000820000280000040a904000a77a00008ee8000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-000782044028700000900900000aa000000880000008200000005000005005000050050000500500005005000050050000500500005005000050050000500500
+0000e000000e000000099000000aa000000220000006500000008000005005000050050000500500005005000050050000500500005005000050050000500500
+0000800000080000009aa90000a77a00002e82000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
+0000820000280000040a904000a77a00002882000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
+000782044028700000900900000aa000000220000008200000005000005005000050050000500500005005000050050000500500005005000050050000500500
 000f82477428f0000400004000000000000000000008200000006000050000500500005005000050050000500500005005000050050000500500005005000050
 000a84fccf48a0000000000000000000000000000000800000008000500000055000000550000005500000055000000550000005500000055000000550000005
 00faa2adda2aaf005000000550000005500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
