@@ -68,7 +68,12 @@ cam.leeway = 5
 starfield = {}
 sparks = {}
 explosions = {}
-			
+movedust = {}
+movedust_width = 6
+movedust_height = 6
+movedust_length_multiplier = 10
+movedust_spacing = 20
+
 function _init()
 	settestboss("medium")
 
@@ -80,6 +85,7 @@ function _init()
 	initbossmatrix()
 	generateboss()
 	initstarfield()
+	initmovedust()
 end
 
 function _update()
@@ -102,6 +108,7 @@ function _draw()
 	cls()
 	drawstarfield()
 	--rectfill(0,0,50,50,3)
+	drawmovedust()
 	drawboss()
 	drawplayer()
 	drawplayershots()
@@ -143,6 +150,20 @@ function initbossmatrix()
 		 boss.tiles.blocks[i][j].hp = 0
 		 boss.tiles.weps[i][j].spr = 0
 		 boss.tiles.weps[i][j].hp = 0
+		end
+	end
+end
+
+function initmovedust()
+	for i=1,movedust_width do
+		movedust[i] = {}
+		for j=1,movedust_height do
+			dust = {}
+			dust.x1 = i*movedust_spacing + flr(rnd(10)-5)
+			dust.y1 = j*movedust_spacing + flr(rnd(10)-5)
+			dust.x2 = dust.x1
+			dust.y2 = dust.y1
+		 movedust[i][j] = dust
 		end
 	end
 end
@@ -236,6 +257,33 @@ function drawexplosions()
 	 else
 	 	del(explosions,expl)
 	 end
+	end
+end
+
+function drawmovedust()
+	length_x = flr(-player.dx*movedust_length_multiplier)
+	length_y = flr(-player.dy*movedust_length_multiplier)
+	for i=1,movedust_width do
+		for j=1,movedust_height do
+		 x1=movedust[i][j].x1 + cam.x - cam.offsetx
+		 y1=movedust[i][j].y1 + cam.y - cam.offsety
+		 x2=movedust[i][j].x2 + cam.x - cam.offsetx + length_x
+		 y2=movedust[i][j].y2 + cam.y - cam.offsety + length_y
+ 
+ 		--debugtext = length_x.." "..length_y
+			colors={1,2,5,13}
+			if (abs(length_x) <= 2) and
+				(abs(length_y) <= 2) then
+				col = colors[flr(rnd(2))]
+			elseif (abs(length_x) <= 25) and
+				(abs(length_y) <= 25) then
+				col = colors[flr(rnd(3))]
+			else
+				col = colors[flr(rnd(5))]
+			end 
+			
+			line(x1,y1,x2,y2,col)
+		end
 	end
 end
 
