@@ -370,6 +370,8 @@ function bossshootbullet(wepx,wepy)
 	bullet.desty = player.y
 	bullet.angle = 0
 	bullet.prox = 0.2
+	bullet.orig_angle = get_angle(bullet.x,bullet.y,bullet.destx,bullet.desty)
+ 
  
 	if #boss.bullets <= boss.bulletmax then
 		add(boss.bullets, bullet)
@@ -379,10 +381,7 @@ end
 function movebossshots()
 
 	for bullet in all(boss.bullets) do
-	newangle = get_angle(bullet.x,bullet.y,bullet.destx,bullet.desty)
- bullet.angle = get_angle_lerp(bullet.angle,newangle,bullet.prox)
-
-		--debugtext=bullet.angle
+ 	bullet.angle = get_angle_lerp(bullet.angle,bullet.orig_angle,bullet.prox)
 		bullet.x += boss.bulletspd * cos(bullet.angle)
 		bullet.y += boss.bulletspd * sin(bullet.angle)
 	end
