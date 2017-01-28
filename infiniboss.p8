@@ -442,11 +442,20 @@ function damage_block(col,row,dmg)
 end
 
 function destroy_block(col,row)
-	boss.tiles.blocks[col][row].spr = 0
+	blockspr = boss.tiles.blocks[col][row].spr
+
  block_x=boss.x + (col*8) + 4
  block_y=boss.y + (row*8) + 4
- 
- generate_explosion(block_x,block_y,10,9,10,7)
+	boss.tiles.blocks[col][row].spr = 0
+	
+	if get_block_type(blockspr) == "core" then
+	 generate_explosion(block_x,block_y,15,2,8,14)	
+	 generate_explosion(block_x-10,block_y,12,2,8,14)
+	 generate_explosion(block_x+10,block_y,12,2,8,14)
+		--todo: trigger next level?
+	else
+ 	generate_explosion(block_x,block_y,10,9,10,7)
+	end
 end
 
 function destroy_wep(col,row)
