@@ -30,8 +30,9 @@ boss.bulletmax = 100
 boss.bulletspd = 2
 boss.bulletdmg = 10
 boss.missiles = {}
-boss.missilemax = 50
-boss.missilespd = 1
+boss.missilemax = 5
+boss.missileaccel = 0.05
+boss.missilemaxspd = 2
 boss.missiledmg = 50
 boss.destroyedblockspr = 146
 
@@ -247,8 +248,65 @@ function drawbossshots()
 		spr(132,bullet.x,bullet.y)
 	end
 	for missile in all	(boss.missiles) do
-		spr(134,missile.x,missile.y)
+		--spr(missile.spr,missile.x,missile.y)
+		drawmissile(missile)
 	end
+end
+
+function drawmissile(missile)
+	spr(missile.sprdata.spr,missile.x,missile.y,1,1,missile.sprdata.flipx,missile.sprdata.flipy)
+end
+
+function rotatemissile(missile)
+	turnspd = 1
+	if abs(missile.spdx) < turnspd then
+		if missile.x <= player.x and
+			missile.spdx <= 0 then
+			rotatemissilespr(missile,"left")
+		elseif missile.x > player.x and
+			missile.spdx >= 0 then
+			rotatemissilespr(missile,"right")
+		end			
+	end
+	if abs(missile.spdy) < turnspd then
+		if missile.y <= player.y and
+			missile.spdy <= 0 then
+			rotatemissilespr(missile,"left")
+		elseif missile.y > player.y and
+			missile.spdy >= 0 then
+			rotatemissilespr(missile,"right")
+		end			
+	end
+	
+end
+
+function rotatemissilespr(missile,direction)
+	angledsprs = {
+		{136,false,false},
+		{135,true,false},
+		{134,true,false},
+		{135,true,true},
+		{136,false,true},
+		{135,false,true},
+		{134,false,false},
+		{135,false,false}	
+	}
+	
+	if direction == "left" then
+		missile.sprdata.index += 1
+		if missile.sprdata.index == 9 then
+			missile.sprdata.index = 1
+		end
+	else
+		missile.sprdata.index -= 1
+		if missile.sprdata.index == 0 then
+			missile.sprdata.index = 8
+		end
+	end
+	
+	missile.sprdata.spr = angledsprs[missile.sprdata.index][1]
+	missile.sprdata.flipx = angledsprs[missile.sprdata.index][2]
+	missile.sprdata.flipy = angledsprs[missile.sprdata.index][3]
 end
 
 function drawsparks()
@@ -446,7 +504,7 @@ function bossshoot()
 							bossshootbullet(wepx,wepy)
 						end
 					elseif wep.spr == 114 then
-						if nsec(1) then
+						if nsec(2) then
 							bossshootmissile(wepx,wepy)
 						end
 					end
@@ -477,11 +535,14 @@ function bossshootmissile(wepx,wepy)
 	missile = {}
 	missile.x = wepx
 	missile.y = wepy
-	missile.destx = player.x
-	missile.desty = player.y
-	missile.angle = 0
-	missile.prox = 0.2
-
+	missile.spdx = 0
+	missile.spdy = 0
+	missile.sprdata = {}
+	missile.sprdata.index = 1
+	missile.sprdata.spr = 136
+	missile.sprdata.flipx = false
+	missile.sprdata.flipy = false
+	
 	if #boss.missiles <= boss.missilemax then
 		add(boss.missiles, missile)
 	end
@@ -496,12 +557,45 @@ function movebossshots()
 	end
 	
 	for missile in all(boss.missiles) do
-		angle = get_angle(missile.x,missile.y,player.x,player.y)
-		missile.angle = get_angle_lerp(missile.angle,angle,missile.prox)
-		missile.x += boss.missilespd * cos(missile.angle)
-		missile.y += boss.missilespd * sin(missile.angle)
+		movemissile(missile)
 	end
 		
+end
+
+function movemissile(missile)
+	if (missile.x <= player.x) then
+		if abs(missile.spdx) < boss.missilemaxspd then
+			missile.spdx += boss.missileaccel
+		else
+			missile.spdx = boss.missilemaxspd
+		end
+	else
+		if abs(missile.spdx) < boss.missilemaxspd then
+			missile.spdx -= boss.missileaccel
+		else
+			missile.spdx = boss.missilemaxspd
+		end
+	end
+	if (missile.y <= player.y) then
+		if abs(missile.spdy) < boss.missilemaxspd then
+			missile.spdy += boss.missileaccel
+		else
+			missile.spdy = boss.missilemaxspd
+		end
+	else
+		if abs(missile.spdx) < boss.missilemaxspd then
+			missile.spdy -= boss.missileaccel
+		else
+			missile.spdy = boss.missilemaxspd
+		end
+	end
+	
+	missile.x += missile.spdx
+	missile.y += missile.spdy
+	if nsec(0.25) then
+		rotatemissile(missile)
+	end
+	
 end
 
 function cleanupshots()
@@ -1194,14 +1288,14 @@ d677dd77dd5555dd77dd776d5d77d77dd77d77d5d6dd757dd757dd6d000550000005500000055000
 00d88d00006776000082220000585d00005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500
 050dd05005066050050dd0500505d050050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050
 00000000000000000000000000000000500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
-0000700000070000000000000000000000000000000a900000009000500000055000000550000005500000055000000550000005500000055000000550000005
-0000e000000e0000000000000000000000000000000820000000a000050000500500005005000050050000500500005005000050050000500500005005000050
-0000e000000e000000099000000aa000000220000006500000008000005005000050050000500500005005000050050000500500005005000050050000500500
-0000800000080000009aa90000a77a00002e82000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-0000820000280000040a904000a77a00002882000006500000005000000550000005500000055000000550000005500000055000000550000005500000055000
-000782044028700000900900000aa000000220000008200000005000005005000050050000500500005005000050050000500500005005000050050000500500
-000f82477428f0000400004000000000000000000008200000006000050000500500005005000050050000500500005005000050050000500500005005000050
-000a84fccf48a0000000000000000000000000000000800000008000500000055000000550000005500000055000000550000005500000055000000550000005
+0000700000070000000000000000000000000000000a900000000000400000000000400050000005500000055000000550000005500000055000000550000005
+0000e000000e00000000000000000000000000000008200000000000090800000000900005000050050000500500005005000050050000500500005005000050
+0000e000000e000000099000000aa00000022000000650000080000000a800000008a80000500500005005000050050000500500005005000050050000500500
+0000800000080000009aa90000a77a00002e82000006500049a85568088500000000800000055000000550000005500000055000000550000005500000055000
+0000820000280000040a904000a77a00002882000006500000800000000050000000500000055000000550000005500000055000000550000005500000055000
+000782044028700000900900000aa000000220000008200000000000000006000000500000500500005005000050050000500500005005000050050000500500
+000f82477428f0000400004000000000000000000008200000000000000000800000600005000050050000500500005005000050050000500500005005000050
+000a84fccf48a0000000000000000000000000000000800000000000000000000000800050000005500000055000000550000005500000055000000550000005
 00faa2adda2aaf000001200000055000500000055000000550000005500000055000000550000005500000055000000550000005500000055000000550000005
 009a989dd989a9000011110000004000050000500500005005000050050000500500005005000050050000500500005005000050050000500500005005000050
 00294291192492000150011000000000005005000050050000500500005005000050050000500500005005000050050000500500005005000050050000500500
