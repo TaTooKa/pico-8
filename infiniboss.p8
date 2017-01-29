@@ -29,6 +29,10 @@ boss.bullets = {}
 boss.bulletmax = 100
 boss.bulletspd = 2
 boss.bulletdmg = 10
+boss.missiles = {}
+boss.missilemax = 50
+boss.missilespd = 1
+boss.missiledmg = 50
 boss.destroyedblockspr = 146
 
 shotmaxdist = 200
@@ -84,7 +88,7 @@ movedust_length_multiplier = 10
 movedust_spacing = 20
 
 function _init()
-	settestboss("huge")
+	settestboss("medium")
 
 	init_timers()
 	
@@ -241,6 +245,9 @@ function drawbossshots()
 	-- boss.missiles
 	for bullet in all(boss.bullets) do
 		spr(132,bullet.x,bullet.y)
+	end
+	for missile in all	(boss.missiles) do
+		spr(134,missile.x,missile.y)
 	end
 end
 
@@ -439,7 +446,9 @@ function bossshoot()
 							bossshootbullet(wepx,wepy)
 						end
 					elseif wep.spr == 114 then
-						-- bossshootmissile()
+						if nsec(1) then
+							bossshootmissile(wepx,wepy)
+						end
 					end
 					
 			end		
@@ -464,6 +473,20 @@ function bossshootbullet(wepx,wepy)
 	end
 end
 
+function bossshootmissile(wepx,wepy)
+	missile = {}
+	missile.x = wepx
+	missile.y = wepy
+	missile.destx = player.x
+	missile.desty = player.y
+	missile.angle = 0
+	missile.prox = 0.2
+
+	if #boss.missiles <= boss.missilemax then
+		add(boss.missiles, missile)
+	end
+end
+
 function movebossshots()
 
 	for bullet in all(boss.bullets) do
@@ -471,6 +494,14 @@ function movebossshots()
 		bullet.x += boss.bulletspd * cos(bullet.angle)
 		bullet.y += boss.bulletspd * sin(bullet.angle)
 	end
+	
+	for missile in all(boss.missiles) do
+		angle = get_angle(missile.x,missile.y,player.x,player.y)
+		missile.angle = get_angle_lerp(missile.angle,angle,missile.prox)
+		missile.x += boss.missilespd * cos(missile.angle)
+		missile.y += boss.missilespd * sin(missile.angle)
+	end
+		
 end
 
 function cleanupshots()
