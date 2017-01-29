@@ -28,6 +28,7 @@ boss.defaultblockhp = 10
 boss.bullets = {}
 boss.bulletmax = 100
 boss.bulletspd = 2
+boss.bulletdmg = 10
 boss.destroyedblockspr = 146
 
 shotmaxdist = 200
@@ -54,6 +55,12 @@ player.wep2.offsety=12
 player.wep2.x2 = 0
 player.wep2.y2 = 0
 player.wep2.shooting=false
+player.hp = 100
+player.colbox = {}
+player.colbox.x1 = 0
+player.colbox.y1 = 0
+player.colbox.x2 = 0
+player.colbox.y2 = 0
 
 -- camera
 cam = {}
@@ -77,7 +84,7 @@ movedust_length_multiplier = 10
 movedust_spacing = 20
 
 function _init()
-	settestboss("small")
+	settestboss("huge")
 
 	init_timers()
 	
@@ -103,7 +110,8 @@ function _update()
  movebossshots()
  
  cleanupshots()
- --checkcollisions()
+ checkcollisions()
+ debugtext = "hp: "..player.hp
 end
 
 function _draw()
@@ -320,6 +328,12 @@ function moveplayer()
 	-- apply accel to position
 	player.x=round(player.x+player.dx)			
 	player.y=round(player.y+player.dy)
+
+	-- move collision box
+	player.colbox.x1 = player.x + 3
+	player.colbox.y1 = player.y + 3
+	player.colbox.x2 = player.x + 13
+	player.colbox.y2 = player.y + 13
 end
 
 function movecamera()
@@ -519,7 +533,24 @@ end
 -- collisions
 
 function checkcollisions()
+	for bullet in all(boss.bullets) do
+		if collideswithplayer(bullet.x,bullet.y) then
+		 generate_explosion(bullet.x,bullet.y,8,2,8,14)
+			player.hp -= boss.bulletdmg
+			del(boss.bullets,bullet)
+		end	
+	end
+end
 
+function collideswithplayer(x,y)
+	if x >= player.colbox.x1 and
+		x <= player.colbox.x2 and
+		y >= player.colbox.y1 and
+		y <= player.colbox.y2 then
+		return true
+	else
+		return false
+	end
 end
 
 function playerwepcollisions()
