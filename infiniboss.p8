@@ -597,33 +597,26 @@ end
 function movemissile(missile)
 	lastx = missile.x
 	lasty = missile.y
+	
 	if (missile.x <= player.x) then
-		if abs(missile.spdx) < boss.missilemaxspd then
-			missile.spdx += boss.missileaccel
-		else
-			missile.spdx = boss.missilemaxspd
-		end
+		missile.spdx += boss.missileaccel
 	else
-		if abs(missile.spdx) < boss.missilemaxspd then
-			missile.spdx -= boss.missileaccel
-		else
-			missile.spdx = boss.missilemaxspd
-		end
-	end
-	if (missile.y <= player.y) then
-		if abs(missile.spdy) < boss.missilemaxspd then
-			missile.spdy += boss.missileaccel
-		else
-			missile.spdy = boss.missilemaxspd
-		end
-	else
-		if abs(missile.spdx) < boss.missilemaxspd then
-			missile.spdy -= boss.missileaccel
-		else
-			missile.spdy = boss.missilemaxspd
-		end
+	 missile.spdx -= boss.missileaccel
 	end
 	
+	if (missile.y <= player.y) then
+		missile.spdy += boss.missileaccel
+	else
+		missile.spdy -= boss.missileaccel
+	end
+	
+	if abs(missile.spdx) > boss.missilemaxspd then
+		missile.spdx = boss.missilemaxspd * sgn(missile.spdx)
+	end
+	if abs(missile.spdy) > boss.missilemaxspd then
+		missile.spdy = boss.missilemaxspd * sgn(missile.spdy)
+	end
+		
 	missile.x += missile.spdx
 	missile.y += missile.spdy
 	if nsec(0.25) then
