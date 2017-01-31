@@ -7,6 +7,9 @@ seed = 1
 pi = 3.14159265359
 timer = 0
 
+state = "maingame"
+level = 1
+
 -- boss
 boss = {}
 
@@ -101,60 +104,83 @@ movedust_spacing = 20
 trails = {}
 
 function _init()
-	settestboss("medium")
+	--settestboss("big")
 
 	init_timers()
-	
-	camera(cam.x,cam.y)
 	srand(seed)
 	
-	initbossmatrix()
-	generateboss()
-	initstarfield()
-	initmovedust()
+	camera(cam.x,cam.y)
+
+	initlevel(level)
+	
 end
 
 function _update()
-	timer=time()
-	update_timers()
+	if state == "maingame" then
+		timer=time()
+		update_timers()
+		
+		moveplayer()
+		movecamera()
+		moveboss()
+		blinkstars()
+		playershoot()
+	 growbomb()
+	 bossshoot()
+	 movebossshots()
+	 
+	 resetmovedust()
+	 
+	 cleanupshots()
+	 checkcollisions()
 	
-	moveplayer()
-	movecamera()
-	moveboss()
-	blinkstars()
-	playershoot()
- growbomb()
- bossshoot()
- movebossshots()
- 
- resetmovedust()
- 
- cleanupshots()
- checkcollisions()
--- debugtext = "hp: "..player.hp
+		check_gameover()
+	end
+	
 end
 
 function _draw()
-	cls()
-	drawstarfield()
-	--rectfill(0,0,50,50,3)
-	drawmovedust()
-	drawboss()
-	drawbomb()
-	drawplayer()
-	drawplayershots()
-	
-	drawtrails()
-	drawbossshots()
-	drawexplosions()
-
-	drawhud()
+	if state == "maingame" then
+		cls()
+		drawstarfield()
+		--rectfill(0,0,50,50,3)
+		drawmovedust()
+		drawboss()
+		drawbomb()
+		drawplayer()
+		drawplayershots()
 		
-	drawstats()
-	drawdebug()
+		drawtrails()
+		drawbossshots()
+		drawexplosions()
+	
+		drawhud()
+			
+		drawstats()
+		drawdebug()
+	end
+	
 end
 
 -- init stuff
+
+function initlevel(level)
+	size_inc = level + level%2
+	
+	boss.width = 5 + size_inc
+	boss.height = 5 + size_inc
+	boss.block_density = 1 + level
+	boss.wep_quantity = 2 + level
+
+	boss.y = player.y - boss.height*8 - 100
+	boss.x = player.x + rnd(300)-150
+
+	initbossmatrix()
+	generateboss()
+	resetbossweapons()
+	initstarfield()
+	initmovedust()
+end
 
 function initstarfield()
 	index=1
@@ -201,6 +227,30 @@ function initmovedust()
 		 movedust[i][j] = dust
 		end
 	end
+end
+
+function resetbossweapons()
+	boss.bullets = {}
+	boss.s_bullets = {}
+	boss.missiles = {}
+end
+
+-- game state stuff
+
+function goto_nextlevel()
+	-- todo: add a 1 sec delay
+	level += 1
+	initlevel(level)
+end
+
+function check_gameover()
+	if player.hp <= 0 then
+		gameover_screen()
+	end
+end
+
+function gameover_screen()
+	debugtext="game over"
 end
 
 -- draw functions
@@ -794,7 +844,7 @@ function destroy_block(col,row)
 	 generate_explosion(block_x-10,block_y,12,2,8,14)
 	 generate_explosion(block_x+10,block_y,12,2,8,14)
 		score += score_core
-		--todo: trigger next level?
+		goto_nextlevel()
 	else
  	generate_explosion(block_x,block_y,10,9,10,7)
 		score += score_block
