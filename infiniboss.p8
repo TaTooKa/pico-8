@@ -30,7 +30,7 @@ boss.bulletmax = 100
 boss.bulletspd = 2
 boss.bulletdmg = 10
 boss.missiles = {}
-boss.missilemax = 5
+boss.missilemax = 20
 boss.missileaccel = 0.05
 boss.missilemaxspd = 2
 boss.missiledmg = 50
@@ -693,6 +693,15 @@ function checkcollisions()
 			del(boss.bullets,bullet)
 		end	
 	end
+
+	for missile in all(boss.missiles) do
+		if collideswithplayer(missile.x+4,missile.y+4) then
+		 generate_explosion(missile.x+4,missile.y+4,12,4,9,10)
+			player.hp -= boss.missiledmg
+			del(boss.missiles,missile)
+		end	
+	end
+
 end
 
 function collideswithplayer(x,y)
