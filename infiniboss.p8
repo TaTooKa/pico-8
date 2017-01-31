@@ -64,6 +64,12 @@ player.wep2.x2 = 0
 player.wep2.y2 = 0
 player.wep2.shooting=false
 player.bombs = 3
+player.bombx = 0
+player.bomby = 0
+player.bombgrowspd = 2
+player.bombradius = 1
+player.bombmaxradius = 50
+player.bombactive = false
 player.hp = 100
 player.colbox = {}
 player.colbox.x1 = 0
@@ -119,6 +125,7 @@ function _update()
 	moveboss()
 	blinkstars()
 	playershoot()
+ growbomb()
  bossshoot()
  movebossshots()
  
@@ -135,6 +142,7 @@ function _draw()
 	--rectfill(0,0,50,50,3)
 	drawmovedust()
 	drawboss()
+	drawbomb()
 	drawplayer()
 	drawplayershots()
 	
@@ -251,6 +259,15 @@ function drawplayershots()
 		y2=player.wep2.y2
 		line(x1,y1,x2,y2,10)
 		line(x1+1,y1,x2+1,y2,9)
+	end
+end
+
+function drawbomb()
+	if player.bombactive then
+		colors = {8,9,10,7,7,7}
+		for i=0,5 do
+			circfill(player.bombx,player.bomby,player.bombradius-i*5,colors[i+1])
+		end
 	end
 end
 
@@ -541,10 +558,53 @@ function playershoot()
 	else
 		player.wep1.shooting=false
 	end
-	if (btn(5)) then
-		player.wep2.shooting=true
+	if (btnp(5)) then
+		--player.wep2.shooting=true
+		if not player.bombactive then
+			usebomb()
+		end
+	end
+end
+
+function usebomb()
+	if player.bombs > 0 then
+		player.bombactive = true
+		player.bombs -= 1
+		player.bombx = player.x+8
+		player.bomby = player.y+8
+		player.bombradius = 1
 	else
-		player.wep2.shooting=false
+		player.bombactive = false
+	end
+end
+
+function growbomb()
+	if player.bombactive then
+		if player.bombradius < player.bombmaxradius then
+			player.bombradius += player.bombgrowspd
+			-- check collisions and destroy stuff
+			for bullet in all(boss.bullets) do
+				if get_distance(bullet.x,bullet.y,player.bombx,player.bomby) < player.bombradius then
+					del(boss.bullets, bullet)
+					generate_explosion(bullet.x,bullet.y,6,5,6,7)
+				end
+			end
+			for s_bullet in all(boss.s_bullets) do
+				if get_distance(s_bullet.x,s_bullet.y,player.bombx,player.bomby) < player.bombradius then
+					del(boss.s_bullets, s_bullet)
+					generate_explosion(s_bullet.x,s_bullet.y,6,5,6,7)
+				end
+			end
+			for missile in all(boss.missiles) do
+				if get_distance(missile.x,missile.y,player.bombx,player.bomby) < player.bombradius then
+					del(boss.missiles, missile)
+					generate_explosion(missile.x,missile.y,6,5,6,7)
+				end
+			end
+
+		else
+			player.bombactive = false
+		end
 	end
 end
 
@@ -1273,6 +1333,10 @@ function settestboss(size)
 		boss.block_density = 15
 		boss.wep_quantity = 25
 	end
+end
+
+function get_distance(x1,y1,x2,y2)
+	return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
 end
 
 function get_angle(x1,y1,x2,y2)
