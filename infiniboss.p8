@@ -84,6 +84,10 @@ cam.offsety = 90
 cam.leeway = 5
 
 score = 0
+score_missile = 1
+score_block = 2
+score_wep = 3
+score_core = 5
 
 starfield = {}
 sparks = {}
@@ -419,7 +423,7 @@ function drawhud()
 	hp_y=y+5
 	line(hp_x,hp_y,hp_x+hp_width,hp_y,10)
 	print("á "..player.hp,x+20,y+2,10)
-	print(score,x+78,y+2,10)
+	print(score,x+69,y+2,10)
 	for i=1,player.bombs do
 		print("è",x+101+i*6,y+2,10)
 	end
@@ -584,6 +588,7 @@ function growbomb()
 				if get_distance(missile.x,missile.y,player.bombx,player.bomby) < player.bombradius then
 					del(boss.missiles, missile)
 					generate_explosion(missile.x,missile.y,6,5,6,7)
+					score += score_missile
 				end
 			end
 
@@ -788,9 +793,11 @@ function destroy_block(col,row)
 	 generate_explosion(block_x,block_y,15,2,8,14)	
 	 generate_explosion(block_x-10,block_y,12,2,8,14)
 	 generate_explosion(block_x+10,block_y,12,2,8,14)
+		score += score_core
 		--todo: trigger next level?
 	else
  	generate_explosion(block_x,block_y,10,9,10,7)
+		score += score_block
 	end
 end
 
@@ -800,6 +807,7 @@ function destroy_wep(col,row)
  block_y=boss.y + (row*8) + 4
  
  generate_explosion(block_x,block_y,7,8,14,7)
+	score += score_wep
 end
 
 -- collisions
@@ -907,6 +915,7 @@ function playerwepcollisions()
 	elseif missilehit == true then
 			generate_explosion(mis_i.x,mis_i.y,7,9,4,5)
 			del(boss.missiles,mis_i)
+			score += score_missile
 	end
 	
 	player.wep1.y2 = wep1_y2
