@@ -57,12 +57,6 @@ player.wep1.offsetx=7
 player.wep1.offsety=4
 player.wep1.y2 = 0
 player.wep1.shooting=false
-player.wep2 = {}
-player.wep2.offsetx=7
-player.wep2.offsety=12
-player.wep2.x2 = 0
-player.wep2.y2 = 0
-player.wep2.shooting=false
 player.bombs = 3
 player.bombx = 0
 player.bomby = 0
@@ -251,14 +245,6 @@ function drawplayershots()
 		line(x1,y1,x2,y2,10)
 		line(x1+1,y1,x2+1,y2,9)
 	 drawsparks()
-	end
-	if player.wep2.shooting then
-		x1=player.x+player.wep2.offsetx
-		y1=player.y+player.wep2.offsety
-		x2=player.wep2.x2
-		y2=player.wep2.y2
-		line(x1,y1,x2,y2,10)
-		line(x1+1,y1,x2+1,y2,9)
 	end
 end
 
@@ -559,7 +545,6 @@ function playershoot()
 		player.wep1.shooting=false
 	end
 	if (btnp(5)) then
-		--player.wep2.shooting=true
 		if not player.bombactive then
 			usebomb()
 		end
