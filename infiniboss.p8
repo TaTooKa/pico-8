@@ -118,7 +118,7 @@ function _update()
  
  cleanupshots()
  checkcollisions()
- debugtext = "hp: "..player.hp
+-- debugtext = "hp: "..player.hp
 end
 
 function _draw()
@@ -252,7 +252,6 @@ function drawbossshots()
 		spr(132,bullet.x,bullet.y)
 	end
 	for missile in all	(boss.missiles) do
-		--spr(missile.spr,missile.x,missile.y)
 		drawmissile(missile)
 	end
 end
@@ -721,14 +720,34 @@ function playerwepcollisions()
 
 	--default laser destination
 	player.wep1.y2=cam.y-cam.offsety
+	wep1_y2=player.wep1.y2
 	
 	tilew=8
 	tileh=8
 	
 	damagedblock=nil
+	sparks={nil,nil}
+	missilehit=false
+	blockhit=false
+	mis_i=nil
 	dmgx=0
 	dmgy=0
 	
+	-- check hit to missiles
+	for missile in all(boss.missiles) do
+		if missile.x+2 <= x1 and
+			missile.x+6 >= x1 and
+			missile.y+6 <= y1 and
+			missile.y > player.wep1.y2 then
+			
+			missilehit=true
+			wep1_y2=missile.y
+			mis_i=missile
+ 		
+		end				
+	end
+	
+ -- check hit to boss blocks
  for i=1,boss.width do
  	for j=1,boss.height do
  		if boss.tiles.blocks[i][j].spr == 0 then
@@ -740,24 +759,29 @@ function playerwepcollisions()
  				and x1 <= tilex+tilew
  				and y1 >= tiley+tileh) then
  				-- block i,j is being shot!
- 				--debugtext = "i,j: "..i..","..j
- 				player.wep1.y2=tiley+tileh
- 				damagedblock={i,j}
- 				dmgx=x1-3
- 				dmgy=tiley+4
- 				
+ 				if missilehit == false
+ 					or (missilehit == true 
+ 					and wep1_y2 < tiley+tileh) then
+						blockhit=true
+						wep1_y2=tiley+tileh
+						damagedblock={i,j}
+						dmgx=x1-3
+						dmgy=tiley+4
  				end
- 		
+ 			end
  		end
  	end
  end
 	
-	if damagedblock then
+	if blockhit == true then
 		sparks = {dmgx,dmgy}
 		damage_block(damagedblock[1],damagedblock[2],1)
-	else
-		sparks = {nil,nil}
+	elseif missilehit == true then
+			generate_explosion(mis_i.x,mis_i.y,7,9,4,5)
+			del(boss.missiles,mis_i)
 	end
+	
+	player.wep1.y2 = wep1_y2
 	
 end
 
