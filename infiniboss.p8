@@ -6,10 +6,12 @@ debugtext = ""
 seed = 7
 pi = 3.14159265359
 timer = 0
+leveltimer = 0
 
 state = "menu"
 waiting = false
 level = 1
+level_msgs = {}
 
 -- boss
 boss = {}
@@ -66,6 +68,7 @@ player.wep1.offsety=4
 player.wep1.y2 = 0
 player.wep1.shooting=false
 player.bombs = 3
+player.bombsused = 0
 player.bombx = 0
 player.bomby = 0
 player.bombgrowspd = 2
@@ -121,12 +124,13 @@ end
 function _update()
 	timer=time()
 	update_timers()
+	debugtext=leveltimer
 
 	if state == "menu" then
 		menuscreen()
 	elseif state == "maingame" then
-
 		if not waiting then		
+			leveltimer += 1
 			moveplayer()
 			movecamera()
 			moveboss()
@@ -144,7 +148,6 @@ function _update()
 		
 			check_gameover()
 		end
-		
 	elseif state == "gameover" then
 		gameover_screen()		
 	end
@@ -172,6 +175,8 @@ function _draw()
 			
 		drawstats()
 		drawdebug()
+	
+		drawlevelmsgscreen()
 	elseif state == "gameover" then
 		drawgameoverscreen()
 	end
@@ -181,9 +186,17 @@ end
 -- init stuff
 
 function initlevel(level)
-	waiting = false
+	
 	initboss()
-	camera(0,0)
+	--camera(0,0)
+	leveltimer=0
+	level_msgs = {}
+	player.bombsused=0
+	if player.bombs < 3 then
+		player.bombs += 1
+	end
+	player.wep1.shooting=false
+	
 	size_inc = level + level%2
 	
 	boss.width = 5 + size_inc
@@ -199,6 +212,8 @@ function initlevel(level)
 	resetbossweapons()
 	initstarfield()
 	initmovedust()
+
+	levelstart_screen()
 end
 
 function initstarfield()
@@ -268,7 +283,8 @@ end
 
 function goto_nextlevel()
 	waiting = true
-	add_timer("wait3",1,nil,
+	levelcomplete_screen()
+	add_timer("wait3",4,nil,
 		function()
 			level += 1
 			initlevel(level)
@@ -280,6 +296,84 @@ function check_gameover()
 	if player.hp <= 0 then
 		state = "gameover"
 	end
+end
+
+function levelstart_screen()
+	msg = {text="level "..level.." start",x=37,y=35,c=7}
+	add(level_msgs,msg)
+
+	add_timer("levels1",1,nil,
+		function()
+			msg = {text="ready!",x=52,y=45,c=7}
+			add(level_msgs,msg)
+		end
+	)
+	add_timer("levels2",1.5,nil,
+		function()
+			waiting=false
+			level_msgs={}
+		end
+	)
+
+end
+
+function levelcomplete_screen()
+	msg = {text="core destroyed",x=35,y=35,c=7}
+	add(level_msgs,msg)
+
+	extralife=0
+	
+	seconds = leveltimer/30
+	if flr(seconds) < 30 then
+		timebonus = 30 - flr(seconds)
+		extralife+=10
+	else
+		timebonus = 0
+	end
+	
+	add_timer("levelc1",0.5,nil,
+		function()
+			msg = {text="time: "..seconds.." sec",x=5,y=45,c=7}
+			add(level_msgs,msg)
+		end
+	)
+	add_timer("levelc2",1,nil,
+		function()
+			msg = {text="time bonus: "..timebonus.." points",x=5,y=55,c=7}
+			add(level_msgs,msg)
+			score+=timebonus
+		end
+	)
+	add_timer("levelc3",1.5,nil,
+		function()
+			if player.bombsused == 0 then
+				text="no bombs used: 50 points"
+				score+=50
+				extralife+=10
+			else
+				text="no bombs used: failed"
+			end
+			msg = {text=text,x=5,y=65,c=7}
+			add(level_msgs,msg)
+		end
+	)
+	add_timer("levelc4",2,nil,
+		function()
+			player.hp+=extralife
+			if player.hp > 100 then
+				extrascore=player.hp-100
+				player.hp = 100
+				text="extralife over max: "..extrascore.." points"
+			else
+				text=extralife.." extra life earned."
+			end
+			msg = {text=text,x=5,y=75,c=7}
+			add(level_msgs,msg)
+			
+		end
+	)
+
+
 end
 
 function gameover_screen()
@@ -299,6 +393,15 @@ function drawmenuscreen()
 	cls()
 	print("menu",50,20,11)
 	print("press Ž/— to start",20,40,11)
+end
+
+function drawlevelmsgscreen()
+	x=cam.x-cam.offsetx
+	y=cam.y-cam.offsety
+	for msg in all(level_msgs) do
+		rectfill(x,y+msg.y-2,x+128,y+msg.y+6,1)
+		print(msg.text,x+msg.x,y+msg.y,msg.c)
+	end
 end
 
 function drawgameoverscreen()
@@ -681,6 +784,7 @@ function usebomb()
 	if player.bombs > 0 then
 		player.bombactive = true
 		player.bombs -= 1
+		player.bombsused += 1
 		player.bombx = player.x+8
 		player.bomby = player.y+8
 		player.bombradius = 1
