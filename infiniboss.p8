@@ -43,6 +43,8 @@ function initboss()
 	boss.missilemaxspd = 2
 	boss.missiledmg = 50
 	boss.destroyedblockspr = 146
+	boss.smoke = {}
+	boss.smokeballs = {}
 end
 
 shotmaxdist = 200
@@ -131,6 +133,7 @@ function _update()
 			blinkstars()
 			playershoot()
 		 growbomb()
+		 updatesmoke()
 		 bossshoot()
 		 movebossshots()
 		 
@@ -163,6 +166,7 @@ function _draw()
 		drawtrails()
 		drawbossshots()
 		drawexplosions()
+		drawsmoke()
 	
 		drawhud()
 			
@@ -467,6 +471,15 @@ function drawexplosions()
 	 else
 	 	del(explosions,expl)
 	 end
+	end
+end
+
+function drawsmoke()
+	colors={13,6,7}
+	colors2={1,5,13}
+	for ball in all(boss.smokeballs) do
+		circfill(ball.x+1,ball.y+1,ball.size+1,colors2[ball.num])
+		circfill(ball.x,ball.y,ball.size,colors[ball.num])
 	end
 end
 
@@ -871,6 +884,23 @@ function blinkstars()
 	end		
 end
 
+function updatesmoke()
+	for smoke in all(boss.smoke) do
+		smoke.x=boss.x + (smoke.col*8) + 3
+	 smoke.y=boss.y + (smoke.row*8) + 3
+	end
+	
+	for ball in all(boss.smokeballs) do
+		ball.x = 2+ball.smoke.x-(ball.num%2)*2
+		ball.y = -5+ball.smoke.y+ball.num*ball.life
+		ball.size = 5-ball.life-ball.num/2
+		ball.life -= 0.5
+		if ball.life <= 0 then
+			ball.life = 5
+		end
+	end
+end
+
 function damage_block(col,row,dmg)
 	-- check for wep
 	if boss.tiles.weps[col][row].spr != 0 then
@@ -901,6 +931,7 @@ function destroy_block(col,row)
 		goto_nextlevel()
 	else
  	generate_explosion(block_x,block_y,10,9,10,7)
+		create_smoke(col,row)
 		score += score_block
 	end
 end
@@ -1392,6 +1423,17 @@ function generate_explosion(x,y,size,col1,col2,col3)
 	explosion.randy2 = y + flr(rnd(10)-5)
 	
 	add(explosions, explosion)
+end
+
+function create_smoke(block_col,block_row)
+	smoke = {}
+	smoke.col=block_col
+	smoke.row=block_row
+	add(boss.smoke,smoke)
+	for i=1,3 do
+		smokeball = {num=i,smoke=smoke,x=0,y=0,life=5}
+		add(boss.smokeballs,smokeball)
+	end
 end
 
 function generate_trail(x,y,lastx,lasty)
