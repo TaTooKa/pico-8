@@ -173,12 +173,13 @@ end
 
 function initlevel(level)
 	initboss()
+	camera(0,0)
 	size_inc = level + level%2
 	
 	boss.width = 5 + size_inc
 	boss.height = 5 + size_inc
-	boss.block_density = 1 + level
-	boss.wep_quantity = 2 + level
+	boss.block_density = 1 + flr(level/2)
+	boss.wep_quantity = 2 + flr(level/2)
 
 	boss.y = player.y - boss.height*8 - 100
 	boss.x = player.x + rnd(300)-150
@@ -605,7 +606,7 @@ function moveboss()
 			
 	else
 		-- roam randomly
-		if rnd(5) > 4 then
+		if rnd(10) > 9 then
 			boss.roamingmult *= -1
 		end
 		boss.dx += boss.accel * boss.roamingmult
@@ -620,7 +621,7 @@ function boss_is_far_from_player()
 	centerx=boss.x+boss.width*4
 	centery=boss.y+boss.height*4
 	
-	max_distance=8*boss.width
+	max_distance=10*boss.width
 	
 	if (abs(centerx-player.x) > max_distance
 		or abs(centery-player.y) > max_distance) then
