@@ -736,24 +736,24 @@ end
 function bossshootspray(wepx,wepy)
 	-- create eight s_bullets
 	spd = boss.s_bulletspd
-	if #boss.s_bullets <= boss.s_bulletmax+8 then
-		sb={x=wepx,y=wepy,spdx=0,spdy=spd}
+	if #boss.s_bullets <= boss.s_bulletmax+9 then
+		sb={x=wepx,y=wepy,spdx=spd,spdy=spd/4}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=-(spd),spdy=spd}
+		sb={x=wepx,y=wepy,spdx=spd*0.9,spdy=spd/2}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=-(spd),spdy=0}
+		sb={x=wepx,y=wepy,spdx=spd*0.7,spdy=spd*0.8}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=-(spd),spdy=0}
+		sb={x=wepx,y=wepy,spdx=spd*0.3,spdy=spd*1.1}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=-(spd),spdy=-(spd)}
+		sb={x=wepx,y=wepy,spdx=0,spdy=spd*1.2}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=0,spdy=-(spd)}
+		sb={x=wepx,y=wepy,spdx=-(spd*0.3),spdy=spd*1.1}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=spd,spdy=-(spd)}
+		sb={x=wepx,y=wepy,spdx=-(spd*0.7),spdy=spd*0.8}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=spd,spdy=0}
+		sb={x=wepx,y=wepy,spdx=-(spd*0.9),spdy=spd/2}
 		add(boss.s_bullets, sb)
-		sb={x=wepx,y=wepy,spdx=spd,spdy=spd}
+		sb={x=wepx,y=wepy,spdx=-(spd),spdy=spd/4}
 		add(boss.s_bullets, sb)
 	end	
 
