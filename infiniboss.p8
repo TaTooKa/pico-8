@@ -116,11 +116,12 @@ function _init()
 end
 
 function _update()
+	timer=time()
+	update_timers()
+
 	if state == "menu" then
 		menuscreen()
 	elseif state == "maingame" then
-		timer=time()
-		update_timers()
 		
 		moveplayer()
 		movecamera()
@@ -257,9 +258,13 @@ end
 -- game state stuff
 
 function goto_nextlevel()
-	-- todo: add a 1 sec delay
-	level += 1
-	initlevel(level)
+	--todo: pause game
+	add_timer("wait3",1,nil,
+		function()
+			level += 1
+			initlevel(level)
+		end
+	)
 end
 
 function check_gameover()
@@ -271,7 +276,11 @@ end
 function gameover_screen()
 	camera(0,0)
 	if btnp(4) or btnp(5) then
-		state = "menu"
+		add_timer("wait2",0.5,nil,
+			function()
+				state = "menu"
+			end
+		)
 	end
 end
 
@@ -905,9 +914,13 @@ function menuscreen()
 	camera(0,0)
 	if btnp(4) or btnp(5) then
 		-- todo: add delay
-		level=1
-		state="maingame"
-		initlevel(level)
+		add_timer("wait",0.5,nil,
+			function()
+				level=1
+				state="maingame"
+				initlevel(level)
+			end
+		)
 	end
 end
 
