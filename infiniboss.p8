@@ -8,6 +8,7 @@ pi = 3.14159265359
 timer = 0
 
 state = "menu"
+waiting = false
 level = 1
 
 -- boss
@@ -122,22 +123,25 @@ function _update()
 	if state == "menu" then
 		menuscreen()
 	elseif state == "maingame" then
+
+		if not waiting then		
+			moveplayer()
+			movecamera()
+			moveboss()
+			blinkstars()
+			playershoot()
+		 growbomb()
+		 bossshoot()
+		 movebossshots()
+		 
+		 resetmovedust()
+		 
+		 cleanupshots()
+		 checkcollisions()
 		
-		moveplayer()
-		movecamera()
-		moveboss()
-		blinkstars()
-		playershoot()
-	 growbomb()
-	 bossshoot()
-	 movebossshots()
-	 
-	 resetmovedust()
-	 
-	 cleanupshots()
-	 checkcollisions()
-	
-		check_gameover()
+			check_gameover()
+		end
+		
 	elseif state == "gameover" then
 		gameover_screen()		
 	end
@@ -173,6 +177,7 @@ end
 -- init stuff
 
 function initlevel(level)
+	waiting = false
 	initboss()
 	camera(0,0)
 	size_inc = level + level%2
@@ -258,7 +263,7 @@ end
 -- game state stuff
 
 function goto_nextlevel()
-	--todo: pause game
+	waiting = true
 	add_timer("wait3",1,nil,
 		function()
 			level += 1
