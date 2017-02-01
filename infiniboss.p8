@@ -7,40 +7,42 @@ seed = 1
 pi = 3.14159265359
 timer = 0
 
-state = "maingame"
+state = "menu"
 level = 1
 
 -- boss
 boss = {}
-
-boss.x = 10
-boss.y = 10
-boss.width = 7
-boss.height = 7
-boss.block_density = 2
-boss.wep_quantity = 5
-boss.tiles = {}
-boss.tiles.blocks = {}
-boss.tiles.weps = {}
-boss.dx = 0
-boss.dy = 0
-boss.accel = 0.2
-boss.deccel = 0.7
-boss.maxspd = 3
-boss.defaultblockhp = 10
-boss.bullets = {}
-boss.bulletmax = 100
-boss.bulletspd = 2
-boss.bulletdmg = 10
-boss.s_bullets = {}
-boss.s_bulletmax = 100
-boss.s_bulletspd = 1
-boss.missiles = {}
-boss.missilemax = 20
-boss.missileaccel = 0.05
-boss.missilemaxspd = 2
-boss.missiledmg = 50
-boss.destroyedblockspr = 146
+function initboss()
+	boss.x = 10
+	boss.y = 10
+	boss.width = 7
+	boss.height = 7
+	boss.block_density = 2
+	boss.wep_quantity = 5
+	boss.tiles = {}
+	boss.tiles.blocks = {}
+	boss.tiles.weps = {}
+	boss.dx = 0
+	boss.dy = 0
+	boss.accel = 0.2
+	boss.deccel = 0.7
+	boss.maxspd = 3
+	boss.roamingmult = 1
+	boss.defaultblockhp = 10
+	boss.bullets = {}
+	boss.bulletmax = 100
+	boss.bulletspd = 2
+	boss.bulletdmg = 10
+	boss.s_bullets = {}
+	boss.s_bulletmax = 100
+	boss.s_bulletspd = 1
+	boss.missiles = {}
+	boss.missilemax = 20
+	boss.missileaccel = 0.05
+	boss.missilemaxspd = 2
+	boss.missiledmg = 50
+	boss.destroyedblockspr = 146
+end
 
 shotmaxdist = 200
 
@@ -109,14 +111,14 @@ function _init()
 	init_timers()
 	srand(seed)
 	
-	camera(cam.x,cam.y)
-
 	initlevel(level)
 	
 end
 
 function _update()
-	if state == "maingame" then
+	if state == "menu" then
+		menuscreen()
+	elseif state == "maingame" then
 		timer=time()
 		update_timers()
 		
@@ -135,15 +137,18 @@ function _update()
 	 checkcollisions()
 	
 		check_gameover()
+	elseif state == "gameover" then
+		gameover_screen()		
 	end
 	
 end
 
 function _draw()
-	if state == "maingame" then
+	if state == "menu" then
+		drawmenuscreen()
+	elseif state == "maingame" then
 		cls()
 		drawstarfield()
-		--rectfill(0,0,50,50,3)
 		drawmovedust()
 		drawboss()
 		drawbomb()
@@ -158,6 +163,8 @@ function _draw()
 			
 		drawstats()
 		drawdebug()
+	elseif state == "gameover" then
+		drawgameoverscreen()
 	end
 	
 end
@@ -165,6 +172,7 @@ end
 -- init stuff
 
 function initlevel(level)
+	initboss()
 	size_inc = level + level%2
 	
 	boss.width = 5 + size_inc
@@ -235,6 +243,16 @@ function resetbossweapons()
 	boss.missiles = {}
 end
 
+function resetplayer()
+	player.hp = 100
+	player.x = 64
+	player.y = 70
+	player.dx = 0
+	player.dy = 0
+	player.bombs = 3
+	score = 0
+end
+
 -- game state stuff
 
 function goto_nextlevel()
@@ -245,15 +263,32 @@ end
 
 function check_gameover()
 	if player.hp <= 0 then
-		gameover_screen()
+		state = "gameover"
 	end
 end
 
 function gameover_screen()
-	debugtext="game over"
+	camera(0,0)
+	if btnp(4) or btnp(5) then
+		state = "menu"
+	end
 end
 
 -- draw functions
+
+function drawmenuscreen()
+	cls()
+	print("menu",50,20,11)
+	print("press Ž/— to start",20,40,11)
+end
+
+function drawgameoverscreen()
+	cls()
+	print("game over",50,20,8)
+	print("level: "..level,50,30,8)
+	print("score: "..score,50,40,8)
+	print("press Ž/— to exit",20,50,11)
+end
 
 function drawboss()
  -- blocks
@@ -477,6 +512,7 @@ function drawhud()
 	for i=1,player.bombs do
 		print("",x+101+i*6,y+2,10)
 	end
+	print("level "..level,x+108,y-120,11)
 end
 
 -- update functions
@@ -569,7 +605,10 @@ function moveboss()
 			
 	else
 		-- roam randomly
-		-- todo?
+		if rnd(5) > 4 then
+			boss.roamingmult *= -1
+		end
+		boss.dx += boss.accel * boss.roamingmult
 	end
 	
 	-- apply deltas to position
@@ -858,6 +897,17 @@ function destroy_wep(col,row)
  
  generate_explosion(block_x,block_y,7,8,14,7)
 	score += score_wep
+end
+
+function menuscreen()
+	resetplayer()
+	camera(0,0)
+	if btnp(4) or btnp(5) then
+		-- todo: add delay
+		level=1
+		state="maingame"
+		initlevel(level)
+	end
 end
 
 -- collisions
