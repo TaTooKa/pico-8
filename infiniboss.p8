@@ -31,7 +31,7 @@ function initboss()
 	boss.deccel = 0.7
 	boss.maxspd = 3
 	boss.roamingmult = 1
-	boss.defaultblockhp = 10
+	boss.defaultblockhp = 20
 	boss.bullets = {}
 	boss.bulletmax = 100
 	boss.bulletspd = 2
@@ -124,8 +124,7 @@ end
 function _update()
 	timer=time()
 	update_timers()
-	debugtext=leveltimer
-
+	
 	if state == "menu" then
 		menuscreen()
 	elseif state == "maingame" then
@@ -173,7 +172,7 @@ function _draw()
 	
 		drawhud()
 			
-		drawstats()
+		--drawstats()
 		drawdebug()
 	
 		drawlevelmsgscreen()
@@ -630,9 +629,13 @@ end
 function drawhud()
 	x = cam.x-cam.offsetx-12
 	y = cam.y-cam.offsety+120
-	hud = {184,185,186,187,188,138,139,170,186,187,188,154,185,186,188,189}
+	hud = {184,185,186,187,188,138,139,170,186,187,188,154,155,185,186,188,189}
+	hud2 = {184,185,186,187,188,189,141,141,141,141,141,184,185,186,187,188,189}
 	for k,v in pairs(hud) do
 		spr(v,x+k*8,y)
+	end
+	for k,v in pairs(hud2) do
+		spr(v,x+k*8,y-120,1,1,false,true)
 	end
 	hp_width = player.hp/10+1
 	hp_x=x+49
@@ -641,9 +644,10 @@ function drawhud()
 	print("á "..player.hp,x+20,y+2,10)
 	print(score,x+69,y+2,10)
 	for i=1,player.bombs do
-		print("è",x+101+i*6,y+2,10)
+		print("è",x+108+i*6,y+2,10)
 	end
-	print("level "..level,x+108,y-120,11)
+	print("lvl "..level,x+109,y-119,10)
+	print("t "..sub(leveltimer/30,1,4),x+20,y-119,10)
 end
 
 -- update functions
@@ -1379,6 +1383,9 @@ end
 function give_initial_tile_hp()
 	for i=1,boss.width do
 		for j=1,boss.height do
+			if boss.tiles.blocks[i][j].spr == 1 then
+				boss.tiles.blocks[i][j].hp = boss.defaultblockhp*2
+			end
 			if boss.tiles.blocks[i][j].spr != 0 then
 				boss.tiles.blocks[i][j].hp = boss.defaultblockhp
 			end
