@@ -2,6 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
 -- infiniboss
+cartdata("tatooka_infiniboss")
 debugtext = ""
 seed = 7
 pi = 3.14159265359
@@ -12,6 +13,8 @@ state = "menu"
 waiting = false
 level = 1
 level_msgs = {}
+
+highscore={level=0,score=0}
 
 -- boss
 boss = {}
@@ -113,9 +116,10 @@ trails = {}
 
 function _init()
 	--settestboss("big")
+	load_highscore()
 
 	init_timers()
-	srand(seed)
+	--srand(seed)
 	
 	initlevel(level)
 	
@@ -183,6 +187,11 @@ function _draw()
 end
 
 -- init stuff
+
+function load_highscore()
+	highscore.level = dget(0)
+	highscore.score = dget(1)
+end
 
 function initlevel(level)
 	
@@ -368,7 +377,7 @@ function levelcomplete_screen()
 			end
 			msg = {text=text,x=5,y=75,c=7}
 			add(level_msgs,msg)
-			
+			update_highscore(score)
 		end
 	)
 
@@ -376,6 +385,7 @@ function levelcomplete_screen()
 end
 
 function gameover_screen()
+	update_highscore(score)
 	camera(0,0)
 	if btnp(4) or btnp(5) then
 		add_timer("wait2",0.5,nil,
@@ -392,6 +402,8 @@ function drawmenuscreen()
 	cls()
 	print("menu",50,20,11)
 	print("press Ž/— to start",20,40,11)
+	print("top score",40,50,11)
+	print("level: "..highscore.level.." score: "..highscore.score,20,60,11)
 end
 
 function drawlevelmsgscreen()
@@ -1564,6 +1576,15 @@ function generate_trail(x,y,lastx,lasty)
 	trail.y = lasty+4
 	
 	add(trails, trail)
+end
+
+function update_highscore(sc)
+	if (sc > highscore.score) then
+		highscore.level = level
+		highscore.score = score
+		dset(0,level)
+		dset(1,score)
+	end
 end
 
 function drawstats()
