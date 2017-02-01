@@ -613,13 +613,18 @@ function moveboss()
 		-- always deccelerate
  boss.dx *= boss.deccel
  boss.dy *= boss.deccel
+ 
+ displacement = 50
+ if level%2 == 0 then
+ 	displacement=-displacement
+ end
 	
 	if (boss_is_far_from_player()) then
 		-- approach player
-		if (centerx < player.x 
+		if (centerx < player.x+displacement 
 			and boss.dx < boss.maxspd) then
 			boss.dx += boss.accel
-		elseif (centerx >= player.x
+		elseif (centerx >= player.x+displacement
 			and boss.dx > -boss.maxspd) then
 			boss.dx -= boss.accel
 		end
