@@ -79,6 +79,7 @@ player.bombradius = 1
 player.bombmaxradius = 50
 player.bombactive = false
 player.hp = 100
+player.lvlstarthp = 0
 player.colbox = {}
 player.colbox.x1 = 0
 player.colbox.y1 = 0
@@ -200,6 +201,8 @@ function initlevel(level)
 		player.bombs += 1
 	end
 	
+	player.lvlstarthp = player.hp
+	
 	player.wep1.shooting=false
 
 	resetposition()
@@ -300,7 +303,7 @@ end
 function goto_nextlevel()
 	waiting = true
 	levelcomplete_screen()
-	add_timer("wait3",4,nil,
+	add_timer("wait3",5,nil,
 		function()
 			level += 1
 			initlevel(level)
@@ -363,11 +366,11 @@ function levelcomplete_screen()
 	add_timer("levelc3",1.5,nil,
 		function()
 			if player.bombsused == 0 then
-				text="no bombs used: 50 points"
-				score+=50
+				text="no bombs used: 25 points"
+				score+=25
 				extralife+=10
 			else
-				text="no bombs used: failed"
+				text="bombs used, no bonus"
 			end
 			msg = {text=text,x=5,y=65,c=7}
 			add(level_msgs,msg)
@@ -375,15 +378,28 @@ function levelcomplete_screen()
 	)
 	add_timer("levelc4",2,nil,
 		function()
+			if player.lvlstarthp == player.hp then
+				text="no damage received: 25 points"
+				score+=25
+			else
+				text="damage received, no bonus"
+			end
+			msg = {text=text,x=5,y=75,c=7}
+			add(level_msgs,msg)
+
+		end
+	)
+	add_timer("levelc5",2.5,nil,
+		function()
 			player.hp+=extralife
 			if player.hp > 100 then
 				extrascore=player.hp-100
 				player.hp = 100
-				text="extralife over max: "..extrascore.." points"
+				text="extra hp over max: "..extrascore.." points"
 			else
-				text=extralife.." extra life earned."
+				text=extralife.." extra hp gained"
 			end
-			msg = {text=text,x=5,y=75,c=7}
+			msg = {text=text,x=5,y=85,c=7}
 			add(level_msgs,msg)
 			update_highscore(score)
 		end
