@@ -109,7 +109,7 @@ explosions = {}
 movedust = {}
 movedust_width = 6
 movedust_height = 6
-movedust_length_multiplier = 2
+movedust_length_multiplier = 0.5
 movedust_spacing = 20
 
 trails = {}
@@ -637,17 +637,17 @@ function drawmovedust()
 	length_y = flr(-player.dy*movedust_length_multiplier)
 	for i=1,movedust_width do
 		for j=1,movedust_height do
-		 x1=movedust[i][j].x1 + cam.x - cam.offsetx
-		 y1=movedust[i][j].y1 + cam.y - cam.offsety
+		 x1=movedust[i][j].x1 + cam.x - cam.offsetx - length_x
+		 y1=movedust[i][j].y1 + cam.y - cam.offsety - length_y
 		 x2=movedust[i][j].x2 + cam.x - cam.offsetx + length_x
 		 y2=movedust[i][j].y2 + cam.y - cam.offsety + length_y
  
 			colors={1,2,5,13}
-			if (abs(length_x) <= 2) and
-				(abs(length_y) <= 2) then
+			if (abs(length_x) <= 1) and
+				(abs(length_y) <= 1) then
 				col = colors[flr(rnd(2))]
-			elseif (abs(length_x) <= 25) and
-				(abs(length_y) <= 25) then
+			elseif (abs(length_x) <= 5) and
+				(abs(length_y) <= 5) then
 				col = colors[flr(rnd(3))]
 			else
 				col = colors[flr(rnd(5))]
