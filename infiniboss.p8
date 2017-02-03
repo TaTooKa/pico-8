@@ -4,7 +4,7 @@ __lua__
 -- infiniboss
 cartdata("tatooka_infiniboss")
 debugtext = ""
-seed = 7
+seed = 1
 pi = 3.14159265359
 timer = 0
 leveltimer = 0
@@ -119,7 +119,7 @@ function _init()
 	load_highscore()
 
 	init_timers()
-	--srand(seed)
+	srand(seed)
 	
 	initlevel(level)
 	
@@ -181,7 +181,7 @@ function _draw()
 			
 		--drawstats()
 		drawdebug()
-	
+
 		drawlevelmsgscreen()
 	elseif state == "gameover" then
 		drawgameoverscreen()
@@ -389,7 +389,10 @@ end
 
 function gameover_screen()
 	update_highscore(score)
-	camera(0,0)
+	x=cam.x-cam.offsetx
+	y=cam.y-cam.offsety
+	camera(x,y)
+
 	if btnp(4) or btnp(5) then
 		add_timer("wait2",0.5,nil,
 			function()
@@ -428,11 +431,16 @@ function drawlevelmsgscreen()
 end
 
 function drawgameoverscreen()
-	cls()
-	print("game over",50,20,8)
-	print("level: "..level,50,30,8)
-	print("score: "..score,50,40,8)
-	print("press Ž/— to exit",20,50,11)
+	x=cam.x-cam.offsetx
+	y=cam.y-cam.offsety
+	rectfill(x,y+38,x+128,y+46,2)
+	print("game over",x+47,y+40,8)
+	
+	rectfill(x,y+53,x+128,y+61,1)
+	print("level: "..level,x+47,y+55,13)
+
+	rectfill(x,y+68,x+128,y+76,1)
+	print("score: "..score,x+47,y+70,13)
 end
 
 function drawboss()
