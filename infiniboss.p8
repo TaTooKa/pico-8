@@ -179,7 +179,6 @@ function _draw()
 
 		drawlevelmsgscreen()
 	elseif state == "gameover" then
-		--drawgameoverscreen()
 		drawlevelmsgscreen()
 	end
 	
@@ -459,20 +458,6 @@ function drawlevelmsgscreen()
 		rectfill(x,y+msg.y-2,x+128,y+msg.y+6,1)
 		print(msg.text,x+msg.x,y+msg.y,msg.c)
 	end
-end
-
-function drawgameoverscreen()
-	x=cam.x-cam.offsetx
-	y=cam.y-cam.offsety
-	
-	rectfill(x,y+38,x+128,y+46,2)
-	print("game over",x+47,y+40,8)
-	
-	rectfill(x,y+53,x+128,y+61,1)
-	print("level: "..level,x+47,y+55,13)
-
-	rectfill(x,y+68,x+128,y+76,1)
-	print("score: "..score,x+47,y+70,13)
 end
 
 function drawboss()
