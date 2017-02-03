@@ -103,7 +103,8 @@ score_block = 2
 score_wep = 3
 score_core = 5
 
-starfield = {}
+starfields = {}
+background = {}
 sparks = {}
 explosions = {}
 movedust = {}
@@ -119,7 +120,7 @@ function _init()
 	load_highscore()
 
 	init_timers()
-	srand(seed)
+	--srand(seed)
 	
 	initlevel(level)
 	
@@ -132,6 +133,7 @@ function _update()
 	if state == "menu" then
 		blinkstars()
 		menuscreen()
+		updatebackground()
 	elseif state == "maingame" then
 		if not waiting then		
 			leveltimer += 1
@@ -139,13 +141,14 @@ function _update()
 			movecamera()
 			moveboss()
 			blinkstars()
+			updatebackground()
 			playershoot()
 		 growbomb()
 		 updatesmoke()
 		 bossshoot()
 		 movebossshots()
 		 
-		 resetmovedust()
+		 --resetmovedust()
 		 
 		 cleanupshots()
 		 checkcollisions()
@@ -161,12 +164,14 @@ end
 function _draw()
 	if state == "menu" then
 		cls()
-		drawstarfield()
+		--drawstarfield()
+		drawbackground()
 		drawmenuscreen()
 	elseif state == "maingame" then
 		cls()
-		drawstarfield()
-		drawmovedust()
+		drawbackground()
+		--drawstarfield()
+		--drawmovedust()
 		drawboss()
 		drawsmoke()
 		drawbomb()
@@ -198,14 +203,16 @@ end
 function initlevel(level)
 	
 	initboss()
-	--camera(0,0)
 	leveltimer=0
 	level_msgs = {}
 	player.bombsused=0
 	if player.bombs < 3 then
 		player.bombs += 1
 	end
+	
 	player.wep1.shooting=false
+
+	resetposition()
 	
 	size_inc = level + level%2
 	
@@ -221,26 +228,42 @@ function initlevel(level)
 	generateboss()
 	resetbossweapons()
 	initstarfield()
-	initmovedust()
-
+	initbackground()
+	--initmovedust()
 	levelstart_screen()
 end
 
 function initstarfield()
+	for i=1,9 do
+		starfields[i] = {}
+	end
+	
 	index=1
 	spacing=18
-	camoffset=-64
 	colors = {0,1,2}
 	for i=0,8 do
 		for j=0,8 do
-			x=i*spacing+(flr(rnd(14))-7)+camoffset
-			y=j*spacing+(flr(rnd(14))-7)+camoffset
+			x=i*spacing+(flr(rnd(14))-7)
+			y=j*spacing+(flr(rnd(14))-7)
 			randcol = flr(rnd(3))+1
-			starfield[index] = {x,y,colors[randcol]}
+			for k=1,9 do
+				starfields[k][index] = {x,y,colors[randcol]}
+			end
 			index+=1
 		end
 	end
+end
 
+function initbackground()
+	background[1] = {x=-128,y=-128}
+	background[2] = {x=0,y=-128}
+	background[3] = {x=128,y=-128}
+	background[4] = {x=-128,y=0}
+	background[5] = {x=0,y=0}
+	background[6] = {x=128,y=0}
+	background[7] = {x=-128,y=128}
+	background[8] = {x=0,y=128}
+	background[9] = {x=128,y=128}	
 end
 
 function initbossmatrix()
@@ -287,6 +310,14 @@ function resetplayer()
 	player.dy = 0
 	player.bombs = 3
 	score = 0
+end
+
+function resetposition()
+	player.x = 0	
+	player.y = 0
+	cam.x = 0
+	cam.y = 0
+	camera(cam.x-cam.offsetx,cam.y-cam.offsety)
 end
 
 -- game state stuff
@@ -469,11 +500,26 @@ function drawplayer()
 end
 
 function drawstarfield()
-	for star in all(starfield) do
-		x = star[1]+cam.x
-		y = star[2]+cam.y
-		col = star[3]
-		rectfill(x,y,x,y,col)
+	for i=1,9 do
+		for star in all(starfields[i]) do
+			x = star[1]+background[i].x--+cam.x
+			y = star[2]+background[i].y--+cam.y
+			col = star[3]
+			rectfill(x,y,x,y,col)
+		end
+	end
+end
+
+function drawbackground()	
+	screen=128
+	for i=1,9 do
+		--rectfill(background[i].x,background[i].y,background[i].x+screen,background[i].y+screen,i%2+1)
+		for star in all(starfields[i]) do
+			x = star[1]+background[i].x
+			y = star[2]+background[i].y
+			col = star[3]
+			rectfill(x,y,x,y,col)
+		end
 	end
 end
 
@@ -1022,10 +1068,54 @@ end
 
 function blinkstars()
 	if nsec(0.5) then
-		for star in all(starfield) do
-			star[3] = get_rand_star_br(star[3])
+		for starfield in all(starfields) do
+			for star in all(starfield) do
+				star[3] = get_rand_star_br(star[3])
+			end
 		end
 	end		
+end
+
+function updatebackground()
+	cur_tile_i = get_cur_bg_tile(cam.x,cam.y) 
+	
+	if cur_tile_i != 5 then
+		if cur_tile_i == 1 then
+			mod_x = -128 mod_y = -128
+		elseif cur_tile_i == 2 then
+			mod_x = 0 mod_y = -128
+		elseif cur_tile_i == 3 then
+			mod_x = 128 mod_y = -128
+		elseif cur_tile_i == 4 then
+			mod_x = -128 mod_y = 0
+		elseif cur_tile_i == 6 then
+			mod_x = 128 mod_y = 0
+		elseif cur_tile_i == 7 then
+			mod_x = -128 mod_y = 128
+		elseif cur_tile_i == 8 then
+			mod_x = 0 mod_y = 128
+		elseif cur_tile_i == 9 then
+			mod_x = 128 mod_y = 128
+		end
+		
+		for i=1,9 do
+			background[i].x += mod_x
+			background[i].y += mod_y
+		end
+
+	end
+end
+
+function get_cur_bg_tile(cam_x,cam_y)
+	for i=1,9 do
+		if cam.x >= background[i].x
+			and cam.x < background[i].x+128
+			and cam.y >= background[i].y
+			and cam.y < background[i].y+128 then
+			return i
+		end
+	end
+	return 0
 end
 
 function updatesmoke()
@@ -1619,7 +1709,7 @@ end
 
 function drawdebug()
 	x = cam.x-cam.offsetx
-	y = cam.y-cam.offsety+122
+	y = cam.y-cam.offsety+112
 	print(debugtext, x, y, 7)
 end
 
@@ -1924,7 +2014,7 @@ cfcfcfcfd8d9dadbdcddcfcfcfcfcfcf8c0000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000400002a550000000000000000000000000000000180502105000000000000e0500000000000201500a05000000000000000018150000000000000000330500000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
