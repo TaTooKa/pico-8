@@ -107,11 +107,6 @@ starfields = {}
 background = {}
 sparks = {}
 explosions = {}
-movedust = {}
-movedust_width = 6
-movedust_height = 6
-movedust_length_multiplier = 0.5
-movedust_spacing = 20
 
 trails = {}
 
@@ -148,8 +143,6 @@ function _update()
 		 bossshoot()
 		 movebossshots()
 		 
-		 --resetmovedust()
-		 
 		 cleanupshots()
 		 checkcollisions()
 		
@@ -164,14 +157,11 @@ end
 function _draw()
 	if state == "menu" then
 		cls()
-		--drawstarfield()
 		drawbackground()
 		drawmenuscreen()
 	elseif state == "maingame" then
 		cls()
 		drawbackground()
-		--drawstarfield()
-		--drawmovedust()
 		drawboss()
 		drawsmoke()
 		drawbomb()
@@ -229,7 +219,6 @@ function initlevel(level)
 	resetbossweapons()
 	initstarfield()
 	initbackground()
-	--initmovedust()
 	levelstart_screen()
 end
 
@@ -278,20 +267,6 @@ function initbossmatrix()
 		 boss.tiles.blocks[i][j].hp = 0
 		 boss.tiles.weps[i][j].spr = 0
 		 boss.tiles.weps[i][j].hp = 0
-		end
-	end
-end
-
-function initmovedust()
-	for i=1,movedust_width do
-		movedust[i] = {}
-		for j=1,movedust_height do
-			dust = {}
-			dust.x1 = i*movedust_spacing + flr(rnd(10)-5)
-			dust.y1 = j*movedust_spacing + flr(rnd(10)-5)
-			dust.x2 = dust.x1
-			dust.y2 = dust.y1
-		 movedust[i][j] = dust
 		end
 	end
 end
@@ -499,17 +474,6 @@ function drawplayer()
 	spr(player.spr,player.x,player.y,2,2)	
 end
 
-function drawstarfield()
-	for i=1,9 do
-		for star in all(starfields[i]) do
-			x = star[1]+background[i].x--+cam.x
-			y = star[2]+background[i].y--+cam.y
-			col = star[3]
-			rectfill(x,y,x,y,col)
-		end
-	end
-end
-
 function drawbackground()	
 	screen=128
 	for i=1,9 do
@@ -674,32 +638,6 @@ function drawtrails()
 		if trail.size < 0 then
 			del(trails,trail)
 		end		
-	end
-end
-
-function drawmovedust()
-	length_x = flr(-player.dx*movedust_length_multiplier)
-	length_y = flr(-player.dy*movedust_length_multiplier)
-	for i=1,movedust_width do
-		for j=1,movedust_height do
-		 x1=movedust[i][j].x1 + cam.x - cam.offsetx - length_x
-		 y1=movedust[i][j].y1 + cam.y - cam.offsety - length_y
-		 x2=movedust[i][j].x2 + cam.x - cam.offsetx + length_x
-		 y2=movedust[i][j].y2 + cam.y - cam.offsety + length_y
- 
-			colors={1,2,5,13}
-			if (abs(length_x) <= 1) and
-				(abs(length_y) <= 1) then
-				col = colors[flr(rnd(2))]
-			elseif (abs(length_x) <= 5) and
-				(abs(length_y) <= 5) then
-				col = colors[flr(rnd(3))]
-			else
-				col = colors[flr(rnd(5))]
-			end 
-			
-			line(x1,y1,x2,y2,col)
-		end
 	end
 end
 
@@ -1042,12 +980,6 @@ function movemissile(missile)
 	end
 	generate_trail(missile.x,missile.y,lastx,lasty)
 	
-end
-
-function resetmovedust()
-	if nsec(0.5) then
-		initmovedust()
-	end
 end
 
 function cleanupshots()
