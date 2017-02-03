@@ -710,10 +710,10 @@ function moveplayer()
 	player.y=round(player.y+player.dy)
 
 	-- move collision box
-	player.colbox.x1 = player.x + 7
-	player.colbox.y1 = player.y + 7
-	player.colbox.x2 = player.x + 10
-	player.colbox.y2 = player.y + 12
+	player.colbox.x1 = player.x + 6
+	player.colbox.y1 = player.y + 6
+	player.colbox.x2 = player.x + 11
+	player.colbox.y2 = player.y + 13
 end
 
 function movecamera()
