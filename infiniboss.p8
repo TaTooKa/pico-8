@@ -179,7 +179,8 @@ function _draw()
 
 		drawlevelmsgscreen()
 	elseif state == "gameover" then
-		drawgameoverscreen()
+		--drawgameoverscreen()
+		drawlevelmsgscreen()
 	end
 	
 end
@@ -413,6 +414,15 @@ function gameover_screen()
 	x=cam.x-cam.offsetx
 	y=cam.y-cam.offsety
 	camera(x,y)
+	
+	msg={text="game over",x=47,y=40,c=8}
+	add(level_msgs,msg)
+
+	msg={text="level: "..level,x=47,y=55,c=13}
+	add(level_msgs,msg)
+
+	msg={text="score: "..score,x=47,y=70,c=13}
+	add(level_msgs,msg)
 
 	if btnp(4) or btnp(5) then
 		add_timer("wait2",0.5,nil,
@@ -454,6 +464,7 @@ end
 function drawgameoverscreen()
 	x=cam.x-cam.offsetx
 	y=cam.y-cam.offsety
+	
 	rectfill(x,y+38,x+128,y+46,2)
 	print("game over",x+47,y+40,8)
 	
