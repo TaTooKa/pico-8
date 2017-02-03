@@ -168,14 +168,13 @@ function _draw()
 		drawstarfield()
 		drawmovedust()
 		drawboss()
+		drawsmoke()
 		drawbomb()
 		drawplayer()
 		drawplayershots()
-		
 		drawtrails()
 		drawbossshots()
 		drawexplosions()
-		drawsmoke()
 	
 		drawhud()
 			
