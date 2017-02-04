@@ -41,7 +41,7 @@ function initboss()
 	boss.bulletdmg = 10
 	boss.s_bullets = {}
 	boss.s_bulletmax = 100
-	boss.s_bulletspd = 2
+	boss.s_bulletspd = 1.5
 	boss.missiles = {}
 	boss.missilemax = 20
 	boss.missileaccel = 0.05
@@ -100,9 +100,9 @@ cam.leeway = 5
 
 score = 0
 score_missile = 1
-score_block = 2
-score_wep = 3
-score_core = 5
+score_block = 3
+score_wep = 10
+score_core = 15
 
 starfields = {}
 background = {}
@@ -207,12 +207,13 @@ function initlevel(level)
 
 	resetposition()
 	
+	--level = 15
 	size_inc = level + level%2
 	
 	boss.width = 5 + size_inc
 	boss.height = 5 + size_inc
-	boss.block_density = 1 + flr(level/2)
-	boss.wep_quantity = 2 + flr(level/2)
+	boss.block_density = 1 + flr(level/3)
+	boss.wep_quantity = 2 + flr(level/3)
 
 	boss.y = player.y - boss.height*8 - 100
 	boss.x = player.x + rnd(300)-150
