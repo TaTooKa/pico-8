@@ -37,11 +37,11 @@ function initboss()
 	boss.defaultblockhp = 20
 	boss.bullets = {}
 	boss.bulletmax = 100
-	boss.bulletspd = 2
+	boss.bulletspd = 1
 	boss.bulletdmg = 10
 	boss.s_bullets = {}
 	boss.s_bulletmax = 100
-	boss.s_bulletspd = 1.5
+	boss.s_bulletspd = 1
 	boss.missiles = {}
 	boss.missilemax = 20
 	boss.missileaccel = 0.05
