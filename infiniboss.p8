@@ -318,8 +318,16 @@ end
 
 function check_gameover()
 	if player.hp <= 0 then
-		state = "gameover"
-		goto_gameover_screen()
+		player.hp = 0
+		sfx(1)
+		generate_explosion(player.x+8,player.y+8,10,8,9,10)
+		generate_explosion(player.x-2,player.y+8,7,8,9,10)
+		generate_explosion(player.x+18,player.y+8,7,8,9,10)
+
+		if nsec(0.5) then
+			state = "gameover"
+			goto_gameover_screen()
+		end
 	end
 end
 
