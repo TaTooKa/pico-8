@@ -4,7 +4,7 @@ __lua__
 -- infiniboss
 cartdata("tatooka_infiniboss")
 debugtext = ""
-seed = 1
+seed = 2
 pi = 3.14159265359
 timer = 0
 leveltimer = 0
@@ -117,7 +117,7 @@ function _init()
 	load_highscore()
 
 	init_timers()
-	--srand(seed)
+	srand(seed)
 	
 	initlevel(level)
 	--music(0)	
@@ -917,17 +917,14 @@ function bossshoot()
 					if wep.spr == 112 then
 						if nsec(1) then
 							bossshootspray(wepx,wepy)
-							sfx(9)
 						end
 					elseif wep.spr == 113 then
-						if nsec(1) then
+						if nsec(0.5) then
 							bossshootbullet(wepx,wepy)
-							sfx(9)
 						end
 					elseif wep.spr == 114 then
 						if nsec(2) then
 							bossshootmissile(wepx,wepy)
-							sfx(10)
 						end
 					end
 					
@@ -941,8 +938,8 @@ function bossshootbullet(wepx,wepy)
 	bullet = {}
 	bullet.x = wepx
 	bullet.y = wepy
-	bullet.destx = player.x-4
-	bullet.desty = player.y-4
+	bullet.destx = player.x
+	bullet.desty = player.y+4
 	bullet.angle = 0
 	bullet.prox = 0.2
 	bullet.orig_angle = get_angle(bullet.x,bullet.y,bullet.destx,bullet.desty)
@@ -950,6 +947,7 @@ function bossshootbullet(wepx,wepy)
  
 	if #boss.bullets <= boss.bulletmax then
 		add(boss.bullets, bullet)
+		sfx(9)
 	end
 end
 
@@ -975,6 +973,7 @@ function bossshootspray(wepx,wepy)
 		add(boss.s_bullets, sb)
 		sb={x=wepx,y=wepy,spdx=-(spd),spdy=spd/4}
 		add(boss.s_bullets, sb)
+		sfx(9)
 	end	
 
 end
@@ -993,6 +992,7 @@ function bossshootmissile(wepx,wepy)
 	
 	if #boss.missiles <= boss.missilemax then
 		add(boss.missiles, missile)
+		sfx(10)
 	end
 end
 
