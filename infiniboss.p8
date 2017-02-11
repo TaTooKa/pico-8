@@ -113,6 +113,24 @@ explosions = {}
 
 trails = {}
 
+tips = {}
+tips[1]={"you can destroy enemy weapon","modules with your bombs."}
+tips[2]={"destroy the core in less than","30 seconds to gain a bonus."}
+tips[3]={"you can fly over the enemy","ship without harm."}
+tips[4]={"each enemy block and weapon you","destroy gets you extra points."}
+tips[5]={"use your bomb to clear nearby","projectiles when surrounded."}
+tips[6]={"finish the level without using","bombs for extra points."}
+tips[7]={"if you don't receive damage you","will gain a bonus."}
+tips[8]={"missiles will never stop","chasing you. shoot'em first."}
+tips[9]={"you gain one free bomb each","time you start a new level."}
+tips[10]={"each weapon in the enemy ship","can be destroyed."}
+tips[11]={"the only way to regain hp is","by completing certain bonuses."} 
+tips[12]={"each enemy spawns in a random","position. follow its bullets!"}
+tips[13]={"your ship's hitbox is actually","the size of the cockpit."}
+tips[14]={"normal bullets do 10 damage.","missiles do 50 damage. dodge!"}
+showing_tip=false
+tip = {}
+
 function _init()
 	--settestboss("big")
 	load_highscore()
@@ -150,6 +168,7 @@ function _update()
 		 cleanupshots()
 		 checkcollisions()
 		
+			check_hide_tip()
 			check_gameover()
 		end
 	elseif state == "gameover" then
@@ -175,7 +194,8 @@ function _draw()
 		drawtrails()
 		drawbossshots()
 		drawexplosions()
-	
+		
+		drawtip()
 		drawhud()
 			
 		--drawstats()
@@ -344,6 +364,7 @@ function levelstart_screen()
 		function()
 			msg = {text="ready!",x=52,y=45,c=7}
 			add(level_msgs,msg)
+			show_tip()
 		end
 	)
 	add_timer("levels2",1.5,nil,
@@ -499,6 +520,19 @@ function drawlevelmsgscreen()
 		end
 
 		print(msg.text,x+msg.x,y+msg.y,msg.c)
+	end
+end
+
+function show_tip()
+	tip = tips[flr(rnd(#tips))+1]
+	showing_tip = true
+end
+
+function check_hide_tip()
+	if showing_tip then
+		if btnp(4) then
+			showing_tip = false
+		end
 	end
 end
 
@@ -727,6 +761,25 @@ function drawhud()
 	end
 	print("lvl "..level,x+109,y-119,10)
 	print("t "..sub(leveltimer/30,1,4),x+20,y-119,10)
+end
+
+function drawtip()
+	if showing_tip then
+		x = cam.x-cam.offsetx
+		y = cam.y-cam.offsety+5
+		rect(x+1,y-3,x+127,y+21,11)
+		rectfill(x+2,y-2,x+126,y+20,3)
+		print("pro tip:",x+48,y,10)
+		for i=1,#tip do
+			print(tip[i],x+3,y+i*7,11)
+		end
+		if nsec(0.5) then
+			c=10
+		else
+			c=11
+		end
+		print("Ž",x+119,y+15,c)
+	end
 end
 
 -- update functions
@@ -2160,8 +2213,8 @@ __music__
 00 2c333144
 00 2b733144
 00 2c733144
-02 31424344
-00 71424344
+00 31334344
+02 31734344
 00 41424344
 00 41424344
 00 41424344
